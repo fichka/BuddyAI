@@ -229,12 +229,6 @@ export const dailyRecommendations: DailyRecommendation[] = [
     title: "Rewrite one Task 2 introduction",
     reason: "Your diagnostic showed good ideas but uneven thesis clarity.",
     action: "Open Writing Lab"
-  },
-  {
-    id: "rec-speaking",
-    title: "Record a Part 2 answer about a helpful person",
-    reason: "A longer answer will improve fluency and topic development.",
-    action: "Start Speaking"
   }
 ];
 

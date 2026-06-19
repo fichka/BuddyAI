@@ -25,6 +25,7 @@ import type {
 
 interface BuddyStore {
   user: UserProfile;
+  registeredUsers: UserProfile[];
   registrationComplete: boolean;
   diagnosticComplete: boolean;
   diagnosticResult: DiagnosticResult;
@@ -193,6 +194,7 @@ const initialRoadmap = recalculateStages(roadmapStages);
 
 export const useBuddyStore = create<BuddyStore>((set, get) => ({
   user: mockUserProfile,
+  registeredUsers: [mockUserProfile],
   registrationComplete: false,
   diagnosticComplete: false,
   diagnosticResult: initialDiagnosticResult,
@@ -290,15 +292,19 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
       readiness = clamp(Math.round((temp.band / targetBand) * 82), 42, 96);
     }
 
-    set((state) => ({
-      user: updatedUser,
-      registrationComplete: true,
-      diagnosticComplete,
-      diagnosticResult: updatedDiagnosticResult,
-      readiness,
-      answerHistory: [...state.answerHistory, ...historyItems],
-      showTriumphantReveal: true
-    }));
+    set((state) => {
+      const filtered = state.registeredUsers.filter((u) => u.email !== updatedUser.email);
+      return {
+        user: updatedUser,
+        registeredUsers: [...filtered, updatedUser],
+        registrationComplete: true,
+        diagnosticComplete,
+        diagnosticResult: updatedDiagnosticResult,
+        readiness,
+        answerHistory: [...state.answerHistory, ...historyItems],
+        showTriumphantReveal: true
+      };
+    });
   },
   completeDiagnostic: (correctAnswers, totalQuestions) => {
     const result = createDiagnosticResult(correctAnswers, totalQuestions);

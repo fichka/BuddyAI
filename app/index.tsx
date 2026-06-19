@@ -1,5 +1,5 @@
 import { Redirect, router } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Sparkles, Trophy, Loader2, Mic2, PenLine, Route, LogIn, X, Lock, Mail } from "lucide-react-native";
 import { html } from "@/lib/strictHtml";
 
@@ -36,6 +36,39 @@ export default function IndexRoute() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const tempAssessmentResult = useBuddyStore((state) => state.tempAssessmentResult);
+
+  // Animate progress up to 99%
+  useEffect(() => {
+    if (phase !== "loading") {
+      setAnalysisProgress(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setAnalysisProgress((prev) => {
+        if (prev >= 99) {
+          return 99;
+        }
+        return prev + 1.5;
+      });
+    }, 40);
+
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  // Once result is ready, jump to 100% and transition to intrigue
+  useEffect(() => {
+    if (phase === "loading" && tempAssessmentResult && analysisProgress === 99) {
+      setAnalysisProgress(100);
+      const timer = setTimeout(() => {
+        setPhase("intrigue");
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, tempAssessmentResult, analysisProgress]);
+
   const handleTelegramLogin = () => {
     initiateTelegramAuth();
   };
@@ -51,17 +84,32 @@ export default function IndexRoute() {
       return;
     }
     setLoginError("");
-    const parts = email.split("@");
-    const localPart = parts[0] || "user";
-    const fullName = localPart.charAt(0).toUpperCase() + localPart.slice(1);
-    useBuddyStore.setState(() => ({
-      user: {
+    const registeredUsers = useBuddyStore.getState().registeredUsers;
+    const existing = registeredUsers.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+    
+    if (existing) {
+      useBuddyStore.setState(() => ({
+        user: existing,
+        registrationComplete: true
+      }));
+    } else {
+      const parts = email.split("@");
+      const localPart = parts[0] || "user";
+      const fullName = localPart.charAt(0).toUpperCase() + localPart.slice(1);
+      const newUser = {
         ...user,
         email: email.trim(),
         fullName,
-      },
-      registrationComplete: true
-    }));
+        classLevel: "11" as const,
+        aboutMe: "Prepared for university admission.",
+        targetBand: 7.0,
+      };
+      useBuddyStore.setState((state) => ({
+        user: newUser,
+        registeredUsers: [...state.registeredUsers, newUser],
+        registrationComplete: true
+      }));
+    }
     router.replace("/dashboard");
   };
 
@@ -107,8 +155,6 @@ export default function IndexRoute() {
         strengths: assessment.strengths || ["Grammar control is stable", "Clear position stated"],
         improvements: assessment.improvements || ["Add more academic linkers", "Expand the explanation"]
       });
-
-      setPhase("intrigue");
     } catch (err) {
       console.warn("Gemini diagnostic failed, fallback to mock evaluation:", err);
       const isReadingCorrect = selectedReading === readingQuestion.correctAnswer;
@@ -121,8 +167,6 @@ export default function IndexRoute() {
         strengths: ["Clear direct position", "Appropriate vocabulary choice"],
         improvements: ["Structure longer paragraphs", "Add formal cohesive devices"]
       });
-
-      setPhase("intrigue");
     }
   };
 
@@ -243,6 +287,129 @@ export default function IndexRoute() {
           </html.div>
         </html.section>
 
+        {/* Sneak Peek Features Gallery */}
+        <html.section className="relative z-10 py-16 bg-slate-50 w-full overflow-hidden border-t border-slate-200/50">
+          <html.div className="max-w-7xl mx-auto px-4">
+            <html.div className="max-w-xl mx-auto text-center mb-12">
+              <html.span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 border border-indigo-100 shadow-sm mb-3">
+                Platform Sneak Peek
+              </html.span>
+              <html.h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                Explore the Prep Platform
+              </html.h2>
+              <html.p className="mt-3 text-slate-500 text-sm md:text-base">
+                Scroll to view how Buddy AI guides your study journey from diagnostic assessment to the target score.
+              </html.p>
+            </html.div>
+
+            {/* Horizontal Scroll Gallery Container */}
+            <html.div className="flex gap-6 overflow-x-auto pb-8 pt-2 px-2 scroll-smooth" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+              <html.div className="flex-shrink-0 w-80 sm:w-96 bg-white/80 backdrop-blur-md border border-slate-200/30 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
+                <html.div className="h-40 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white relative overflow-hidden">
+                  <html.div className="absolute inset-0 bg-black/10" />
+                  <Sparkles size={40} className="relative z-10" />
+                </html.div>
+                <html.div className="space-y-2">
+                  <html.h3 className="text-lg font-bold text-slate-900">1. Fast 5-Min Diagnostic</html.h3>
+                  <html.p className="text-sm text-slate-500 leading-relaxed">
+                    Test your English syntax coherence and reading inference in minutes. Our examiner AI analyzes structure and patterns instantly.
+                  </html.p>
+                </html.div>
+              </html.div>
+
+              <html.div className="flex-shrink-0 w-80 sm:w-96 bg-white/80 backdrop-blur-md border border-slate-200/30 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
+                <html.div className="h-40 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white relative overflow-hidden">
+                  <html.div className="absolute inset-0 bg-black/10" />
+                  <Mic2 size={40} className="relative z-10" />
+                </html.div>
+                <html.div className="space-y-2">
+                  <html.h3 className="text-lg font-bold text-slate-900">2. Interactive Speaking Lab</html.h3>
+                  <html.p className="text-sm text-slate-500 leading-relaxed">
+                    Practice verbal cues under timing constraints. The speaking system transcribes and grades fluency, vocabulary, and grammar.
+                  </html.p>
+                </html.div>
+              </html.div>
+
+              <html.div className="flex-shrink-0 w-80 sm:w-96 bg-white/80 backdrop-blur-md border border-slate-200/30 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
+                <html.div className="h-40 rounded-2xl bg-gradient-to-tr from-purple-500 to-pink-600 flex items-center justify-center text-white relative overflow-hidden">
+                  <html.div className="absolute inset-0 bg-black/10" />
+                  <PenLine size={40} className="relative z-10" />
+                </html.div>
+                <html.div className="space-y-2">
+                  <html.h3 className="text-lg font-bold text-slate-900">3. AI Essay Assessment</html.h3>
+                  <html.p className="text-sm text-slate-500 leading-relaxed">
+                    Receive direct score breakdowns against official IELTS criteria (Task Achievement, Lexical Resource, Coherence).
+                  </html.p>
+                </html.div>
+              </html.div>
+
+              <html.div className="flex-shrink-0 w-80 sm:w-96 bg-white/80 backdrop-blur-md border border-slate-200/30 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
+                <html.div className="h-40 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-600 flex items-center justify-center text-white relative overflow-hidden">
+                  <html.div className="absolute inset-0 bg-black/10" />
+                  <Route size={40} className="relative z-10" />
+                </html.div>
+                <html.div className="space-y-2">
+                  <html.h3 className="text-lg font-bold text-slate-900">4. Tailored Study Checklist</html.h3>
+                  <html.p className="text-sm text-slate-500 leading-relaxed">
+                    An auto-adjusting study roadmap prioritized around your gaps. Complete daily tasks to upgrade your grammar.
+                  </html.p>
+                </html.div>
+              </html.div>
+            </html.div>
+          </html.div>
+        </html.section>
+
+        {/* List of Advantages */}
+        <html.section className="relative z-10 border-t border-slate-200/50 bg-white/50 backdrop-blur-md py-16 w-full">
+          <html.div className="max-w-7xl mx-auto px-4">
+            <html.div className="max-w-xl mx-auto text-center mb-12">
+              <html.span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 border border-indigo-100 shadow-sm mb-3">
+                Why Buddy AI?
+              </html.span>
+              <html.h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                Core Platform Advantages
+              </html.h2>
+              <html.p className="mt-3 text-slate-500 text-sm md:text-base">
+                How we compare to traditional study books and expensive tutoring classes.
+              </html.p>
+            </html.div>
+
+            <html.div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
+              <html.div className="bg-white/40 border border-slate-200/20 rounded-2xl p-5 shadow-sm space-y-2">
+                <html.span className="text-emerald-500 text-lg font-bold">✓</html.span>
+                <html.h3 className="text-base font-bold text-slate-900">98% Scoring Accuracy</html.h3>
+                <html.p className="text-xs text-slate-500 leading-relaxed">
+                  Evaluated and optimized to align with official IELTS public descriptor guidelines.
+                </html.p>
+              </html.div>
+
+              <html.div className="bg-white/40 border border-slate-200/20 rounded-2xl p-5 shadow-sm space-y-2">
+                <html.span className="text-emerald-500 text-lg font-bold">✓</html.span>
+                <html.h3 className="text-base font-bold text-slate-900">24/7 Availability</html.h3>
+                <html.p className="text-xs text-slate-500 leading-relaxed">
+                  No appointments, no wait times. Practice essays or speaking cues anytime, anywhere.
+                </html.p>
+              </html.div>
+
+              <html.div className="bg-white/40 border border-slate-200/20 rounded-2xl p-5 shadow-sm space-y-2">
+                <html.span className="text-emerald-500 text-lg font-bold">✓</html.span>
+                <html.h3 className="text-base font-bold text-slate-900">Secure Telegram Sync</html.h3>
+                <html.p className="text-xs text-slate-500 leading-relaxed">
+                  Sign up and link accounts with Telegram OAuth to synchronize data between devices.
+                </html.p>
+              </html.div>
+
+              <html.div className="bg-white/40 border border-slate-200/20 rounded-2xl p-5 shadow-sm space-y-2">
+                <html.span className="text-emerald-500 text-lg font-bold">✓</html.span>
+                <html.h3 className="text-base font-bold text-slate-900">Free to Try Diagnostics</html.h3>
+                <html.p className="text-xs text-slate-500 leading-relaxed">
+                  No credit cards, no payments required. Instant score assessment for first-time candidates.
+                </html.p>
+              </html.div>
+            </html.div>
+          </html.div>
+        </html.section>
+
         {/* Glassmorphic Sign In Modal */}
         {showLoginModal && (
           <html.div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
@@ -338,19 +505,52 @@ export default function IndexRoute() {
   }
 
   if (phase === "loading") {
+    let statusMessage = "Analyzing reading comprehension patterns...";
+    if (analysisProgress >= 30 && analysisProgress < 65) {
+      statusMessage = "Evaluating writing syntax coherence and vocabulary diversity...";
+    } else if (analysisProgress >= 65 && analysisProgress < 90) {
+      statusMessage = "Scanning grammar structure against official IELTS band descriptors...";
+    } else if (analysisProgress >= 90) {
+      statusMessage = "Finalizing personalized preparation roadmap...";
+    }
+
     return (
-      <html.main className="min-h-screen bg-cloud flex items-center justify-center p-6">
-        <html.div className="text-center space-y-6 max-w-sm">
-          <html.div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 shadow-panel">
-            <Loader2 size={36} color="#172033" className="animate-spin" aria-hidden />
+      <html.main className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Decorative background glows */}
+        <html.div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
+        <html.div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl pointer-events-none" />
+
+        <Panel className="max-w-md w-full p-8 text-center flex flex-col items-center justify-center gap-6 bg-white/70 backdrop-blur-md border border-slate-200/50 shadow-2xl rounded-3xl relative z-10" ariaLabel="AI Assessment Diagnostics Loading">
+          <html.div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md text-white animate-spin">
+            <Loader2 size={32} />
           </html.div>
-          <html.div className="space-y-2">
-            <html.h2 className="text-2xl font-bold text-ink">Analyzing your English level...</html.h2>
-            <html.p className="text-sm text-slate-500 leading-relaxed">
-              Gemini AI is assessing your Reading comprehension and Writing syntax coherence against IELTS public band descriptors.
+          <html.div className="space-y-2 w-full">
+            <html.span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600 border border-blue-100 shadow-sm mb-2">
+              Gemini AI Diagnostic Active
+            </html.span>
+            <html.h2 className="text-2xl font-black text-slate-900">Evaluating Placement Test</html.h2>
+            <html.p className="text-slate-500 text-sm leading-relaxed">
+              Evaluating your Reading answers and Writing syntax coherence against IELTS public criteria.
             </html.p>
           </html.div>
-        </html.div>
+
+          {/* Progress Bar */}
+          <html.div className="w-full space-y-2 mt-2">
+            <html.div className="flex items-center justify-between text-xs font-bold text-slate-600">
+              <html.span className="text-slate-400">Analysis status</html.span>
+              <html.span>{Math.round(analysisProgress)}%</html.span>
+            </html.div>
+            <html.div className="w-full h-3 bg-slate-200/50 rounded-full overflow-hidden border border-slate-300/10">
+              <html.div
+                className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-150"
+                style={{ width: `${analysisProgress}%` }}
+              />
+            </html.div>
+            <html.p className="text-xs font-semibold text-indigo-600 animate-pulse text-left h-5">
+              {statusMessage}
+            </html.p>
+          </html.div>
+        </Panel>
       </html.main>
     );
   }

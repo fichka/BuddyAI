@@ -2,7 +2,7 @@ export type CEFRLevel = "A2" | "B1" | "B2" | "C1";
 
 export type IELTSSection = "Reading" | "Listening" | "Writing" | "Speaking";
 
-export type PracticeMode = IELTSSection | "Mock Exam";
+export type PracticeMode = IELTSSection;
 
 export type RoadmapStageName =
   | "Grammar"

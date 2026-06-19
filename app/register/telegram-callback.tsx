@@ -23,24 +23,36 @@ export default function TelegramCallbackRoute() {
         const redirectUri = window.location.origin + window.location.pathname;
         const tgUser = await exchangeCodeForTelegramUser(code, redirectUri);
         
-        // Save in register form and user state
-        setRegisterForm({
-          fullName: tgUser.fullName,
-          email: tgUser.email || `${tgUser.username || "telegram"}_user@t.me`,
-          aboutMe: "" // Will be filled in next step
-        });
+        const email = tgUser.email || `${tgUser.username || "telegram"}_user@t.me`;
+        const registeredUsers = useBuddyStore.getState().registeredUsers;
+        const existingUser = registeredUsers.find((u) => u.email === email);
 
-        useBuddyStore.setState((state) => ({
-          user: {
-            ...state.user,
+        if (existingUser) {
+          // Sign in directly
+          useBuddyStore.setState(() => ({
+            user: existingUser,
+            registrationComplete: true
+          }));
+          router.replace("/dashboard");
+        } else {
+          // Register flow
+          setRegisterForm({
             fullName: tgUser.fullName,
-            email: tgUser.email || `${tgUser.username || "telegram"}_user@t.me`,
-            avatarUrl: tgUser.avatarUrl || "https://api.dicebear.com/9.x/initials/svg?seed=" + encodeURIComponent(tgUser.fullName)
-          }
-        }));
+            email,
+            aboutMe: ""
+          });
 
-        // Redirect to fill additional information
-        router.replace("/register/telegram-profile" as any);
+          useBuddyStore.setState((state) => ({
+            user: {
+              ...state.user,
+              fullName: tgUser.fullName,
+              email,
+              avatarUrl: tgUser.avatarUrl || "https://api.dicebear.com/9.x/initials/svg?seed=" + encodeURIComponent(tgUser.fullName)
+            }
+          }));
+
+          router.replace("/register/telegram-profile" as any);
+        }
       } catch (err) {
         console.error("Error during Telegram authentication callback", err);
         router.replace("/");

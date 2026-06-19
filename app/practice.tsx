@@ -22,14 +22,13 @@ import { bandDescriptors, listeningTask, readingPassage, speakingPrompts, writin
 import { useBuddyStore } from "@/lib/store";
 import type { DiagnosticQuestion, PracticeMode, SpeakingFeedback, WritingFeedback } from "@/lib/types";
 
-const modes: PracticeMode[] = ["Speaking", "Writing", "Reading", "Listening", "Mock Exam"];
+const modes: PracticeMode[] = ["Speaking", "Writing", "Reading", "Listening"];
 
 const modeIcons: Record<PracticeMode, typeof Mic2> = {
   Speaking: Mic2,
   Writing: PenLine,
   Reading: FileText,
-  Listening: Headphones,
-  "Mock Exam": Trophy
+  Listening: Headphones
 };
 
 const sampleWriting =
@@ -715,68 +714,7 @@ Suggested Revision Line: ${writingFeedback.upgradeLine}`;
           </Panel>
         ) : null}
 
-        {activeMode === "Mock Exam" ? (
-          <Panel ariaLabel="Mock exam">
-            <SectionTitle eyebrow="Mock exam" title="Full simulated test and post-exam report" />
-            <html.div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-              <html.div className="rounded-lg bg-ink p-5 text-white">
-                <Trophy size={30} color="#f4b740" aria-hidden />
-                <html.h3 className="mt-4 text-2xl font-semibold">Start 2 hour 45 minute simulation</html.h3>
-                <html.p className="mt-3 text-sm leading-6 text-slate-200">
-                  This prototype compresses the exam and instantly generates a realistic score report from mock data.
-                </html.p>
-                <html.button
-                  type="button"
-                  onClick={completeMockExam}
-                  className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-ink"
-                >
-                  <CheckCircle2 size={17} color="#172033" aria-hidden />
-                  <html.span>Generate exam report</html.span>
-                </html.button>
-              </html.div>
 
-              <html.div className="rounded-lg border border-slate-200 p-4">
-                {mockExamReport ? (
-                  <>
-                    <html.div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <html.div>
-                        <html.p className="text-sm font-semibold text-slate-500">{mockExamReport.date}</html.p>
-                        <html.h3 className="text-2xl font-semibold text-ink">Overall band {mockExamReport.overallBand.toFixed(1)}</html.h3>
-                      </html.div>
-                      <Pill tone="mint">{mockExamReport.readiness}% ready</Pill>
-                    </html.div>
-                    <html.div className="grid gap-3 sm:grid-cols-2">
-                      {(["Reading", "Listening", "Writing", "Speaking"] as const).map((section) => (
-                        <html.div key={section} className="rounded-lg bg-slate-50 p-4">
-                          <html.p className="text-sm font-semibold text-slate-500">{section}</html.p>
-                          <html.p className="mt-1 text-2xl font-semibold text-ink">
-                            {mockExamReport.sections[section].toFixed(1)}
-                          </html.p>
-                        </html.div>
-                      ))}
-                    </html.div>
-                    <html.div className="mt-4 space-y-2">
-                      {mockExamReport.nextActions.map((action) => (
-                        <html.p key={action} className="rounded-lg bg-mint/10 p-3 text-sm leading-5 text-ink">
-                          {action}
-                        </html.p>
-                      ))}
-                    </html.div>
-                  </>
-                ) : (
-                  <html.div className="grid gap-3 md:grid-cols-2">
-                    {bandDescriptors.map((descriptor) => (
-                      <html.div key={descriptor.label} className="rounded-lg bg-slate-50 p-4">
-                        <html.p className="text-sm font-semibold text-ink">{descriptor.label}</html.p>
-                        <html.p className="mt-2 text-sm leading-6 text-slate-600">{descriptor.detail}</html.p>
-                      </html.div>
-                    ))}
-                  </html.div>
-                )}
-              </html.div>
-            </html.div>
-          </Panel>
-        ) : null}
 
         {aiNotice ? (
           <html.div className="rounded-lg border border-amber/30 bg-amber/15 p-3 text-sm font-semibold text-ink">

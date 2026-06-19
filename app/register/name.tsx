@@ -5,18 +5,21 @@ import { html } from "@/lib/strictHtml";
 
 import { useBuddyStore } from "@/lib/store";
 import { Panel, Pill, cn } from "@/components/ui";
+import { initiateTelegramAuth } from "@/lib/telegramOauth";
 
 export default function RegisterNameRoute() {
   const registerForm = useBuddyStore((state) => state.registerForm);
   const setRegisterForm = useBuddyStore((state) => state.setRegisterForm);
 
+  const [fullName, setFullName] = useState(registerForm.fullName || "");
+  const [aboutMe, setAboutMe] = useState(registerForm.aboutMe || "");
   const [email, setEmail] = useState(registerForm.email || "");
   const [password, setPassword] = useState(registerForm.password || "");
   const [confirmPassword, setConfirmPassword] = useState(registerForm.confirmPassword || "");
   const [error, setError] = useState("");
 
   const handleNext = () => {
-    if (!email.trim() || !password || !confirmPassword) {
+    if (!fullName.trim() || !aboutMe.trim() || !email.trim() || !password || !confirmPassword) {
       setError("Please fill in all fields.");
       return;
     }
@@ -35,6 +38,8 @@ export default function RegisterNameRoute() {
 
     setError("");
     setRegisterForm({
+      fullName: fullName.trim(),
+      aboutMe: aboutMe.trim(),
       email: email.trim(),
       password,
       confirmPassword
@@ -91,6 +96,44 @@ export default function RegisterNameRoute() {
             className="space-y-4"
           >
             <html.div className="rounded-lg bg-slate-50 p-4 md:p-6 space-y-4 flex flex-col justify-center">
+              {/* Telegram Signup option */}
+              <html.div className="pb-4 border-b border-slate-200">
+                <html.p className="text-xs font-bold text-slate-500 uppercase tracking-widest text-center mb-3">Or sign up instantly</html.p>
+                <html.button
+                  type="button"
+                  onClick={() => initiateTelegramAuth()}
+                  className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#24A1DE] text-sm font-bold text-white shadow-sm hover:bg-[#208ebd] transition transform hover:scale-[1.01] active:scale-[0.99]"
+                >
+                  <html.span className="text-lg">✈</html.span>
+                  <html.span>Register with Telegram</html.span>
+                </html.button>
+              </html.div>
+
+              <html.label className="block">
+                <html.span className="mb-2 block text-sm font-semibold text-slate-600">Full Name</html.span>
+                <html.input
+                  required
+                  autoFocus
+                  type="text"
+                  placeholder="e.g. John Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.currentTarget.value)}
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm text-ink outline-none focus:border-ocean"
+                />
+              </html.label>
+
+              <html.label className="block">
+                <html.span className="mb-2 block text-sm font-semibold text-slate-600">About Me / Goals</html.span>
+                <html.input
+                  required
+                  type="text"
+                  placeholder="e.g. Preparing for study abroad in Canada"
+                  value={aboutMe}
+                  onChange={(e) => setAboutMe(e.currentTarget.value)}
+                  className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm text-ink outline-none focus:border-ocean"
+                />
+              </html.label>
+
               <html.label className="block">
                 <html.span className="mb-2 block text-sm font-semibold text-slate-600">Email Address</html.span>
                 <html.input
