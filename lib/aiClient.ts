@@ -67,7 +67,8 @@ async function postGemini<TResponse>(payload: any): Promise<TResponse> {
   if (apiKey) {
     const prompt = promptFor(payload);
     const schema = schemaFor(payload.action);
-    const model = "gemini-2.5-flash";
+    // gemini-2.0-flash: stable, fast, full structured-output support
+    const model = "gemini-2.0-flash";
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
@@ -86,13 +87,17 @@ async function postGemini<TResponse>(payload: any): Promise<TResponse> {
 
     if (!geminiResponse.ok) {
       const details = await geminiResponse.text();
-      throw new Error(`Gemini direct returned ${geminiResponse.status}: ${details.slice(0, 240)}`);
+      throw new Error(`Gemini ${geminiResponse.status}: ${details.slice(0, 300)}`);
     }
 
     const json = await geminiResponse.json();
-    const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+    // Gemini 2.x can return multiple parts (e.g. thought tokens + final answer).
+    // We want the LAST non-thought text part which contains the JSON response.
+    const parts: any[] = json.candidates?.[0]?.content?.parts ?? [];
+    const textPart = [...parts].reverse().find((p: any) => p.text && !p.thought) ?? parts[0];
+    const text = textPart?.text;
     if (!text) {
-      throw new Error("Gemini direct returned empty response");
+      throw new Error("Gemini returned empty response: " + JSON.stringify(json).slice(0, 200));
     }
 
     return JSON.parse(text) as TResponse;

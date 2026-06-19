@@ -217,8 +217,9 @@ export default function PracticeRoute() {
         ]
       }));
     } catch (err) {
-      console.warn("Gemini is unavailable, so Buddy used local mock speaking feedback:", err);
-      setAiNotice("Gemini is unavailable, so Buddy used local mock speaking feedback.");
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn("Gemini speaking failed:", errMsg);
+      setAiNotice(`Gemini error (using mock): ${errMsg.slice(0, 120)}`);
       const mockResult: SpeakingFeedback = {
         id: `speaking-mock-${Date.now()}`,
         band: 6.5,
@@ -269,8 +270,9 @@ export default function PracticeRoute() {
         ]
       }));
     } catch (err) {
-      console.warn("Gemini is unavailable, so Buddy used local mock writing grade:", err);
-      setAiNotice("Gemini is unavailable, so Buddy used local mock writing grade.");
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn("Gemini writing failed:", errMsg);
+      setAiNotice(`Gemini error (using mock): ${errMsg.slice(0, 120)}`);
       const mockFeedback: WritingFeedback = {
         id: `writing-mock-${Date.now()}`,
         taskType: selectedWritingTask.taskType,
