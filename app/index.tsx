@@ -1,5 +1,5 @@
 import { Redirect, router } from "expo-router";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ArrowRight, Sparkles, Trophy, Loader2, Mic2, PenLine, Route, LogIn, X, Lock, Mail } from "lucide-react-native";
 import { html } from "@/lib/strictHtml";
 
@@ -38,45 +38,43 @@ export default function IndexRoute() {
 
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const tempAssessmentResult = useBuddyStore((state) => state.tempAssessmentResult);
-  // Ref tracks whether we already triggered the transition (prevents setTimeout cancellation bug)
+  // Store interval in a ref so we can stop it from the transition effect
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const transitionFiredRef = useRef(false);
 
-  // Animate progress up to 99% — faster speed (2.5 / 35ms ≈ ~1.4s to reach 99%)
+  // Progress animation — runs independently, clamps at 95% to leave room for "result received" jump
   useEffect(() => {
     if (phase !== "loading") {
       setAnalysisProgress(0);
       transitionFiredRef.current = false;
+      if (intervalRef.current) clearInterval(intervalRef.current);
       return;
     }
 
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setAnalysisProgress((prev) => {
-        if (prev >= 99) return 99;
-        return prev + 2.5;
+        if (prev >= 95) return 95; // Hold at 95% until result arrives
+        return prev + 2;
       });
-    }, 35);
+    }, 40);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [phase]);
 
-  // Once result is ready AND progress reached 99%, trigger transition exactly once.
-  // Using a ref avoids the bug where the setTimeout cleanup fires when analysisProgress
-  // changes from 99 → 100, cancelling the timer before setPhase("intrigue") runs.
+  // Transition fires the MOMENT tempAssessmentResult is set — no dependency on analysisProgress.
+  // This effect does NOT return a cleanup function so the timer is never cancelled by a re-render.
   useEffect(() => {
-    if (
-      phase === "loading" &&
-      tempAssessmentResult &&
-      analysisProgress >= 99 &&
-      !transitionFiredRef.current
-    ) {
-      transitionFiredRef.current = true;
-      setAnalysisProgress(100);
-      const timer = setTimeout(() => {
-        setPhase("intrigue");
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [phase, tempAssessmentResult, analysisProgress]);
+    if (phase !== "loading" || !tempAssessmentResult || transitionFiredRef.current) return;
+    transitionFiredRef.current = true;
+    // Stop the progress interval and snap to 100%
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setAnalysisProgress(100);
+    // Short pause so the user sees 100%, then navigate
+    setTimeout(() => setPhase("intrigue"), 700);
+    // Intentionally no cleanup — we want this timer to always complete
+  }, [phase, tempAssessmentResult]);
 
   const handleTelegramLogin = () => {
     initiateTelegramAuth();
@@ -143,8 +141,22 @@ export default function IndexRoute() {
 
     setPhase("loading");
 
+    const isReadingCorrect = selectedReading === readingQuestion.correctAnswer;
+
+    const fallbackResult = {
+      band: isReadingCorrect ? 6.5 : 6.0,
+      summary: "Your response shows a clear position and good vocabulary range. Focus on introducing more formal discourse markers (e.g. furthermore, consequently) and expanding body paragraphs with specific examples.",
+      readingCorrect: isReadingCorrect,
+      strengths: ["Clear direct position stated", "Appropriate vocabulary choice"],
+      improvements: ["Structure longer paragraphs", "Add formal cohesive devices"]
+    };
+
+    // Hard timeout — if Gemini takes longer than 10s, use fallback immediately
+    const timeoutId = setTimeout(() => {
+      setTempAssessmentResult(fallbackResult);
+    }, 10000);
+
     try {
-      const isReadingCorrect = selectedReading === readingQuestion.correctAnswer;
       const taskPayload = {
         taskType: "Task 2" as const,
         title: "Technology and Education",
@@ -153,6 +165,7 @@ export default function IndexRoute() {
       };
 
       const assessment = await assessWritingWithGemini(user, taskPayload, writingAnswer.trim());
+      clearTimeout(timeoutId); // Cancel fallback — real result arrived in time
       const baseWritingBand = assessment.band;
       const readingBonus = isReadingCorrect ? 0.5 : 0;
       const overallBand = Math.min(9.0, Math.max(4.0, baseWritingBand + readingBonus));
@@ -165,17 +178,9 @@ export default function IndexRoute() {
         improvements: assessment.improvements || ["Add more academic linkers", "Expand the explanation"]
       });
     } catch (err) {
-      console.warn("Gemini diagnostic failed, fallback to mock evaluation:", err);
-      const isReadingCorrect = selectedReading === readingQuestion.correctAnswer;
-      const overallBand = isReadingCorrect ? 6.5 : 6.0;
-
-      setTempAssessmentResult({
-        band: overallBand,
-        summary: "Your response is clear and provides a solid foundation. Focus on introducing more formal linkers (e.g. furthermore, consequently) and expanding body paragraphs with examples.",
-        readingCorrect: isReadingCorrect,
-        strengths: ["Clear direct position", "Appropriate vocabulary choice"],
-        improvements: ["Structure longer paragraphs", "Add formal cohesive devices"]
-      });
+      clearTimeout(timeoutId);
+      console.warn("Gemini diagnostic failed, using fallback evaluation:", err);
+      setTempAssessmentResult(fallbackResult);
     }
   };
 
@@ -245,7 +250,7 @@ export default function IndexRoute() {
         <html.section className="relative z-10 border-t border-slate-200/50 bg-white/50 backdrop-blur-md py-16 w-full">
           <html.div className="max-w-7xl mx-auto px-4">
             <html.div className="max-w-xl mx-auto text-center mb-12">
-              <html.h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              <html.h2 className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
                 Designed to maximize your IELTS band
               </html.h2>
               <html.p className="mt-3 text-slate-500 text-sm md:text-base">
@@ -297,14 +302,14 @@ export default function IndexRoute() {
         </html.section>
 
         {/* Sneak Peek Features Gallery */}
-        <html.section className="relative z-10 py-16 bg-slate-50 w-full overflow-hidden border-t border-slate-200/50">
+        <html.section className="relative z-10 py-16 bg-slate-50 w-full border-t border-slate-200/50">
           <html.div className="max-w-7xl mx-auto px-4">
             <html.div className="max-w-xl mx-auto text-center mb-12">
               <html.span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 border border-indigo-100 shadow-sm mb-3">
                 Platform Sneak Peek
               </html.span>
-              <html.h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-                Explore the Prep Platform
+              <html.h2 className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+                Explore the Platform
               </html.h2>
               <html.p className="mt-3 text-slate-500 text-sm md:text-base">
                 Scroll to view how Buddy AI guides your study journey from diagnostic assessment to the target score.
@@ -312,7 +317,7 @@ export default function IndexRoute() {
             </html.div>
 
             {/* Horizontal Scroll Gallery Container */}
-            <html.div className="flex gap-6 overflow-x-auto pb-8 pt-2 px-2 scroll-smooth" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+            <html.div className="flex gap-6 overflow-x-auto overflow-y-visible pb-8 pt-2 px-2 scroll-smooth" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" } as React.CSSProperties}>
               <html.div className="flex-shrink-0 w-80 sm:w-96 bg-white/80 backdrop-blur-md border border-slate-200/30 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col gap-4">
                 <html.div className="h-40 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white relative overflow-hidden">
                   <html.div className="absolute inset-0 bg-black/10" />
@@ -375,7 +380,7 @@ export default function IndexRoute() {
               <html.span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 border border-indigo-100 shadow-sm mb-3">
                 Why Buddy AI?
               </html.span>
-              <html.h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              <html.h2 className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
                 Core Platform Advantages
               </html.h2>
               <html.p className="mt-3 text-slate-500 text-sm md:text-base">
