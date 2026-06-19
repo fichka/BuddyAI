@@ -21,6 +21,7 @@ export const html = {
   h2: element("h2"),
   h3: element("h3"),
   header: element("header"),
+  img: element("img"),
   input: element("input"),
   label: element("label"),
   main: element("main"),

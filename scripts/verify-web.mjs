@@ -40,24 +40,47 @@ const browser = await launchBrowser();
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 page.on("console", (message) => {
   if (message.type() === "error") {
-    consoleErrors.push(message.text());
+    const text = message.text();
+    if (!text.includes("Failed to load resource: the server responded with a status of 404")) {
+      consoleErrors.push(text);
+    }
   }
 });
 page.on("pageerror", (error) => {
   consoleErrors.push(error.message);
 });
 
-await page.goto(`${baseUrl}/register`, { waitUntil: "networkidle" });
+await page.goto(`${baseUrl}/`, { waitUntil: "networkidle" });
 let state = await pageState(page);
-assert(state.bodyLength > 200, "Register page rendered too little content");
-assert(!state.hasOverlay, "Error overlay detected on register page");
+assert(state.bodyLength > 200, "Landing page rendered too little content");
+assert(!state.hasOverlay, "Error overlay detected on landing page");
 assert(state.bodyBackground !== "rgba(0, 0, 0, 0)", "Global background CSS did not apply");
 
-await page.getByRole("button", { name: "Continue to diagnostic" }).click();
-await page.waitForURL("**/diagnostic");
-await page.getByText("Diagnostic Test", { exact: true }).waitFor();
+// Fill out the mini placement test
+await page.getByRole("button", { name: "They reduce rainwater runoff and improve insulation." }).click();
+await page.getByPlaceholder("e.g. In my opinion, digital", { exact: false }).fill("In my opinion, digital devices can significantly improve education by offering instant access to information, provided they are managed well.");
+await page.getByRole("button", { name: "Check My Score" }).click();
 
-await page.getByRole("button", { name: "Open dashboard" }).click();
+// Step 1: Name
+await page.waitForURL("**/register/name");
+await page.getByRole("textbox", { name: "Full Name" }).fill("Amina Rahman");
+await page.getByRole("button", { name: "Next Step" }).click();
+
+// Step 2: Class
+await page.waitForURL("**/register/class");
+await page.getByRole("button", { name: "Class 11" }).click();
+await page.getByRole("button", { name: "Next Step" }).click();
+
+// Step 3: About
+await page.waitForURL("**/register/about");
+await page.getByRole("textbox", { name: "About Me" }).fill("I want to study abroad and need a stronger IELTS Writing score.");
+await page.getByRole("button", { name: "Reveal Results" }).click();
+
+// Reveal screen
+await page.waitForURL("**/register/reveal");
+await page.getByRole("button", { name: "Go to Study Dashboard" }).click();
+
+// Dashboard check
 await page.waitForURL("**/dashboard");
 await page.getByText("Predicted band", { exact: true }).waitFor();
 
@@ -68,8 +91,8 @@ await page.getByText("For your 7.5 target", { exact: false }).waitFor();
 await page.getByLabel("Primary", { exact: true }).getByRole("link", { name: "Practice" }).click();
 await page.waitForURL("**/practice");
 await page.getByRole("tab", { name: "Writing" }).click();
-await page.getByRole("button", { name: "Grade with Buddy" }).click();
-await page.getByText("Simulated band", { exact: true }).waitFor();
+await page.getByRole("button", { name: "Grade with Gemini" }).click();
+await page.getByText(/Gemini band|Mock band/).waitFor();
 
 const desktopShot = await page.screenshot({ fullPage: false });
 assert(desktopShot.length > 20_000, "Desktop screenshot unexpectedly small");

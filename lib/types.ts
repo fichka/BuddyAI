@@ -14,18 +14,15 @@ export type RoadmapStageName =
 
 export interface RegistrationForm {
   fullName: string;
-  age: string;
-  country: string;
-  school: string;
-  email: string;
-  password: string;
-  currentLevel: CEFRLevel;
-  targetBand: string;
-  examDate: string;
+  classLevel: "9" | "10" | "11" | "12";
+  aboutMe: string;
 }
 
 export interface UserProfile {
   fullName: string;
+  classLevel: "9" | "10" | "11" | "12";
+  aboutMe: string;
+  avatarUrl: string;
   age: number;
   country: string;
   school: string;
@@ -110,6 +107,46 @@ export interface WritingFeedback {
   grammar: number;
   summary: string;
   upgradeLine: string;
+  strengths?: string[];
+  improvements?: string[];
+  source?: "mock" | "gemini";
+}
+
+export interface StartTestAnswers {
+  readingMainIdea: string;
+  readingVocabulary: string;
+  writingResponse: string;
+}
+
+export interface StartTestResult {
+  id: string;
+  predictedBand: number;
+  readingScore: number;
+  writingBand: number;
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  source: "mock" | "gemini";
+}
+
+export interface AnswerHistoryItem {
+  id: string;
+  kind: "onboarding" | "mini-test" | "speaking" | "writing";
+  question: string;
+  answer: string;
+}
+
+export interface SpeakingFeedback {
+  id: string;
+  band: number;
+  fluency: number;
+  lexical: number;
+  grammar: number;
+  pronunciation: number;
+  summary: string;
+  improvedAnswer: string;
+  nextDrill: string;
+  source: "mock" | "gemini";
 }
 
 export interface ReadingPassage {

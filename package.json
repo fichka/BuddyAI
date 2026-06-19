@@ -40,6 +40,7 @@
     "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4.3.1",
     "@types/react": "~19.2.7",
+    "@vercel/node": "^5.8.17",
     "postcss": "^8.5.6",
     "typescript": "^5.9.3"
   },

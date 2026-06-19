@@ -15,6 +15,9 @@ import type {
 
 export const mockUserProfile: UserProfile = {
   fullName: "Amina Rahman",
+  classLevel: "11",
+  aboutMe: "I want to study abroad and need a stronger IELTS Writing score.",
+  avatarUrl: "https://api.dicebear.com/9.x/initials/svg?seed=Amina%20Rahman",
   age: 17,
   country: "Kazakhstan",
   school: "Qyzylorda Lyceum",

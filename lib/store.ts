@@ -17,8 +17,10 @@ import type {
   RegistrationForm,
   RoadmapStage,
   SpeakingPrompt,
+  SpeakingFeedback,
   UserProfile,
-  WritingFeedback
+  WritingFeedback,
+  AnswerHistoryItem
 } from "./types";
 
 interface BuddyStore {
@@ -34,17 +36,31 @@ interface BuddyStore {
   activeRecommendationId: string;
   speakingPrompt: SpeakingPrompt;
   speakingTranscript: string;
+  speakingFeedback: SpeakingFeedback | null;
   writingFeedback: WritingFeedback | null;
   mockExamReport: MockExamReport | null;
+  registerForm: RegistrationForm;
+  miniTestAnswers: {
+    readingAnswers: Record<string, string>;
+    writingAnswer: string;
+  };
+  answerHistory: AnswerHistoryItem[];
   registerUser: (form: RegistrationForm) => void;
+  setRegisterForm: (form: Partial<RegistrationForm>) => void;
+  setMiniTestAnswers: (answers: { readingAnswers?: Record<string, string>; writingAnswer?: string }) => void;
   completeDiagnostic: (correctAnswers: number, totalQuestions: number) => void;
   toggleTask: (stageId: string, taskId: string) => void;
-  sendBuddyMessage: (message: string) => void;
+  sendBuddyMessage: (message: string) => Promise<void>;
   rotateRecommendation: () => void;
   setSpeakingPrompt: (promptId: string) => void;
   recordSpeakingTranscript: (transcript: string) => void;
+  applySpeakingFeedback: (feedback: SpeakingFeedback) => void;
   submitWriting: (taskType: "Task 1" | "Task 2", text: string) => void;
+  applyWritingFeedback: (feedback: WritingFeedback) => void;
+  appendBuddyExchange: (message: string, reply: string) => void;
   completeMockExam: () => void;
+  updateAnswerHistoryItem: (id: string, answer: string) => void;
+  startBuddyChatWithContext: (contextText: string, initialBuddyReply: string) => void;
 }
 
 const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
@@ -133,7 +149,27 @@ const writingFeedbackFor = (taskType: "Task 1" | "Task 2", text: string): Writin
     upgradeLine:
       taskType === "Task 1"
         ? "Upgrade: Overall, all three categories increased, but the sharpest rise occurred in the final period."
-        : "Upgrade: Although digital tools can distract learners, structured use can improve access, feedback, and independent study."
+        : "Upgrade: Although digital tools can distract learners, structured use can improve access, feedback, and independent study.",
+    source: "mock"
+  };
+};
+
+const speakingFeedbackFor = (transcript: string): SpeakingFeedback => {
+  const wordCount = transcript.trim().split(/\s+/).filter(Boolean).length;
+  const band = clamp(wordCount > 55 ? 6.5 : 6, 4.5, 7);
+
+  return {
+    id: `speaking-feedback-${Date.now()}`,
+    band,
+    fluency: band,
+    lexical: clamp(band - 0.5, 0, 9),
+    grammar: clamp(band - 0.5, 0, 9),
+    pronunciation: band,
+    summary: "Your answer is understandable. Add a clearer example, reduce repetition, and finish with a reflective final sentence.",
+    improvedAnswer:
+      "I would say this experience helped me become more confident because I had to explain my ideas clearly and respond to unexpected questions.",
+    nextDrill: "Record a 45 second answer using one reason, one example, and one final reflection.",
+    source: "mock"
   };
 };
 
@@ -159,25 +195,52 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
     waveform: [30, 45, 35, 55]
   },
   speakingTranscript: "",
+  speakingFeedback: null,
   writingFeedback: null,
   mockExamReport: null,
+  registerForm: {
+    fullName: "",
+    classLevel: "11",
+    aboutMe: ""
+  },
+  miniTestAnswers: {
+    readingAnswers: {},
+    writingAnswer: ""
+  },
+  answerHistory: [],
+  setRegisterForm: (form) => set((state) => ({ registerForm: { ...state.registerForm, ...form } })),
+  setMiniTestAnswers: (answers) => set((state) => ({
+    miniTestAnswers: {
+      readingAnswers: { ...state.miniTestAnswers.readingAnswers, ...answers.readingAnswers },
+      writingAnswer: typeof answers.writingAnswer === "string" ? answers.writingAnswer : state.miniTestAnswers.writingAnswer
+    }
+  })),
   registerUser: (form) => {
-    const targetBand = Number.parseFloat(form.targetBand);
-    const age = Number.parseInt(form.age, 10);
-    set({
-      user: {
-        fullName: form.fullName.trim() || mockUserProfile.fullName,
-        age: Number.isNaN(age) ? mockUserProfile.age : age,
-        country: form.country.trim() || mockUserProfile.country,
-        school: form.school.trim() || mockUserProfile.school,
-        email: form.email.trim() || mockUserProfile.email,
-        currentLevel: form.currentLevel,
-        targetBand: Number.isNaN(targetBand) ? mockUserProfile.targetBand : targetBand,
-        examDate: form.examDate || mockUserProfile.examDate,
-        predictedBand: mockUserProfile.predictedBand
+    const mini = get().miniTestAnswers;
+    const historyItems = [
+      {
+        id: "mini-test-reading",
+        kind: "mini-test" as const,
+        question: "Mini Test Reading: Urban Heat and Green Roofs benefit",
+        answer: mini.readingAnswers["reading-green-benefit"] || "No answer"
       },
-      registrationComplete: true
-    });
+      {
+        id: "mini-test-writing",
+        kind: "mini-test" as const,
+        question: "Mini Test Writing: Technology and Education",
+        answer: mini.writingAnswer || "No answer"
+      }
+    ];
+    set((state) => ({
+      user: {
+        ...state.user,
+        fullName: form.fullName.trim() || mockUserProfile.fullName,
+        classLevel: form.classLevel || mockUserProfile.classLevel,
+        aboutMe: form.aboutMe.trim() || mockUserProfile.aboutMe,
+      },
+      registrationComplete: true,
+      answerHistory: [...state.answerHistory, ...historyItems]
+    }));
   },
   completeDiagnostic: (correctAnswers, totalQuestions) => {
     const result = createDiagnosticResult(correctAnswers, totalQuestions);
@@ -229,7 +292,7 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
       };
     });
   },
-  sendBuddyMessage: (message) => {
+  sendBuddyMessage: async (message) => {
     const trimmed = message.trim();
     if (!trimmed) {
       return;
@@ -242,17 +305,49 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
       content: trimmed,
       time: nowTime()
     };
-    const response: ChatMessage = {
-      id: `chat-buddy-${Date.now()}`,
-      role: "buddy",
-      content: buddyReply(trimmed, state.user),
-      time: nowTime()
-    };
 
     set({
-      chat: [...state.chat, userMessage, response],
-      dailyProgress: clamp(state.dailyProgress + 2, 0, 100)
+      chat: [...state.chat, userMessage],
+      dailyProgress: clamp(state.dailyProgress + 1, 0, 100)
     });
+
+    try {
+      const { askBuddyWithGemini } = await import("./aiClient");
+      const reply = await askBuddyWithGemini(
+        get().user,
+        trimmed,
+        get().chat,
+        {
+          diagnosticResult: get().diagnosticResult,
+          readiness: get().readiness,
+          writingFeedback: get().writingFeedback,
+          speakingTranscript: get().speakingTranscript
+        }
+      );
+
+      const response: ChatMessage = {
+        id: `chat-buddy-${Date.now()}`,
+        role: "buddy",
+        content: reply,
+        time: nowTime()
+      };
+
+      set((state) => ({
+        chat: [...state.chat, response],
+        dailyProgress: clamp(state.dailyProgress + 1, 0, 100)
+      }));
+    } catch (error) {
+      console.warn("Gemini chatbot failed, fallback to mock reply:", error);
+      const response: ChatMessage = {
+        id: `chat-buddy-${Date.now()}`,
+        role: "buddy",
+        content: buddyReply(trimmed, get().user),
+        time: nowTime()
+      };
+      set((state) => ({
+        chat: [...state.chat, response]
+      }));
+    }
   },
   rotateRecommendation: () => {
     const currentId = get().activeRecommendationId;
@@ -273,11 +368,30 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
   recordSpeakingTranscript: (transcript) => {
     set((state) => ({
       speakingTranscript: transcript,
+      speakingFeedback: transcript.trim() ? speakingFeedbackFor(transcript) : null,
       dailyProgress: clamp(state.dailyProgress + 1, 0, 100)
+    }));
+  },
+  applySpeakingFeedback: (feedback) => {
+    set((state) => ({
+      speakingFeedback: feedback,
+      readiness: clamp(state.readiness + 2, 0, 100),
+      chat: [
+        ...state.chat,
+        {
+          id: `chat-speaking-${Date.now()}`,
+          role: "buddy",
+          content: `Speaking feedback: band ${feedback.band.toFixed(1)}. Next drill: ${feedback.nextDrill}`,
+          time: nowTime()
+        }
+      ]
     }));
   },
   submitWriting: (taskType, text) => {
     const feedback = writingFeedbackFor(taskType, text);
+    get().applyWritingFeedback(feedback);
+  },
+  applyWritingFeedback: (feedback) => {
     set((state) => ({
       writingFeedback: feedback,
       readiness: clamp(state.readiness + 2, 0, 100),
@@ -286,10 +400,35 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
         {
           id: `chat-writing-${Date.now()}`,
           role: "buddy",
-          content: `${taskType} graded at band ${feedback.band.toFixed(1)}. Your fastest fix is: ${feedback.upgradeLine}`,
+          content: `${feedback.taskType} graded at band ${feedback.band.toFixed(1)}. Your fastest fix is: ${feedback.upgradeLine}`,
           time: nowTime()
         }
       ]
+    }));
+  },
+  appendBuddyExchange: (message, reply) => {
+    const trimmed = message.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    set((state) => ({
+      chat: [
+        ...state.chat,
+        {
+          id: `chat-user-${Date.now()}`,
+          role: "user",
+          content: trimmed,
+          time: nowTime()
+        },
+        {
+          id: `chat-buddy-${Date.now()}`,
+          role: "buddy",
+          content: reply,
+          time: nowTime()
+        }
+      ],
+      dailyProgress: clamp(state.dailyProgress + 2, 0, 100)
     }));
   },
   completeMockExam: () => {
@@ -300,6 +439,32 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
         ...state.user,
         predictedBand: latestMockExamReport.overallBand
       }
+    }));
+  },
+  updateAnswerHistoryItem: (id, answer) => {
+    set((state) => ({
+      answerHistory: state.answerHistory.map((item) =>
+        item.id === id ? { ...item, answer } : item
+      )
+    }));
+  },
+  startBuddyChatWithContext: (contextText, initialBuddyReply) => {
+    set((state) => ({
+      chat: [
+        ...state.chat,
+        {
+          id: `chat-context-${Date.now()}`,
+          role: "user",
+          content: `[Context: ${contextText}]`,
+          time: nowTime()
+        },
+        {
+          id: `chat-context-reply-${Date.now()}`,
+          role: "buddy",
+          content: initialBuddyReply,
+          time: nowTime()
+        }
+      ]
     }));
   }
 }));
