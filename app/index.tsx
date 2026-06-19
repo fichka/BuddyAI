@@ -1,11 +1,12 @@
 import { Redirect, router } from "expo-router";
 import { useState } from "react";
-import { ArrowRight, Sparkles, Trophy, Loader2, Mic2, PenLine, Route } from "lucide-react-native";
+import { ArrowRight, Sparkles, Trophy, Loader2, Mic2, PenLine, Route, LogIn, X, Lock, Mail } from "lucide-react-native";
 import { html } from "@/lib/strictHtml";
 
 import { useBuddyStore } from "@/lib/store";
 import { Panel, Pill, SectionTitle, cn } from "@/components/ui";
 import { assessWritingWithGemini } from "@/lib/aiClient";
+import { initiateTelegramAuth } from "@/lib/telegramOauth";
 
 const readingQuestion = {
   id: "reading-green-benefit",
@@ -29,6 +30,40 @@ export default function IndexRoute() {
   const [selectedReading, setSelectedReading] = useState("");
   const [writingAnswer, setWritingAnswer] = useState("");
   const [errorNotice, setErrorNotice] = useState("");
+  
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
+  const handleTelegramLogin = () => {
+    initiateTelegramAuth();
+  };
+
+  const handleEmailLogin = (e: any) => {
+    e.preventDefault();
+    if (!email.includes("@")) {
+      setLoginError("Please enter a valid email address.");
+      return;
+    }
+    if (password.length < 6) {
+      setLoginError("Password must be at least 6 characters.");
+      return;
+    }
+    setLoginError("");
+    const parts = email.split("@");
+    const localPart = parts[0] || "user";
+    const fullName = localPart.charAt(0).toUpperCase() + localPart.slice(1);
+    useBuddyStore.setState(() => ({
+      user: {
+        ...user,
+        email: email.trim(),
+        fullName,
+      },
+      registrationComplete: true
+    }));
+    router.replace("/dashboard");
+  };
 
   if (registrationComplete) {
     return <Redirect href="/dashboard" />;
@@ -101,6 +136,24 @@ export default function IndexRoute() {
         {/* Decorative background glows */}
         <html.div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
         <html.div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl pointer-events-none" />
+
+        {/* Header */}
+        <html.header className="relative z-10 w-full max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+          <html.div className="flex items-center gap-2">
+            <html.div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md">
+              <Sparkles size={20} color="#ffffff" aria-hidden />
+            </html.div>
+            <html.span className="text-xl font-black text-slate-900 tracking-tight">IELTS Buddy AI</html.span>
+          </html.div>
+          <html.button
+            type="button"
+            onClick={() => setShowLoginModal(true)}
+            className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white border border-slate-200 px-5 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <LogIn size={16} />
+            <html.span>Sign In</html.span>
+          </html.button>
+        </html.header>
 
         {/* Hero Section */}
         <html.section className="relative z-10 flex flex-col items-center justify-center text-center px-4 py-20 md:py-32 max-w-5xl mx-auto w-full">
@@ -189,6 +242,97 @@ export default function IndexRoute() {
             </html.div>
           </html.div>
         </html.section>
+
+        {/* Glassmorphic Sign In Modal */}
+        {showLoginModal && (
+          <html.div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+            <html.div className="w-full max-w-md bg-white/90 backdrop-blur-md border border-slate-200/50 rounded-3xl p-6 shadow-2xl relative">
+              <html.button
+                type="button"
+                onClick={() => {
+                  setShowLoginModal(false);
+                  setLoginError("");
+                }}
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition"
+              >
+                <X size={16} />
+              </html.button>
+
+              <html.div className="space-y-5">
+                <html.div className="space-y-1 text-center mt-2">
+                  <html.h2 className="text-2xl font-black text-slate-900">Sign In to Buddy</html.h2>
+                  <html.p className="text-sm text-slate-500 leading-relaxed">
+                    Access your personalized IELTS roadmap & examiner recommendations.
+                  </html.p>
+                </html.div>
+
+                <html.button
+                  type="button"
+                  onClick={handleTelegramLogin}
+                  className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#24A1DE] text-sm font-bold text-white shadow-md hover:bg-[#208ebd] transition transform hover:scale-[1.01] active:scale-[0.99]"
+                >
+                  <html.span className="text-lg">✈</html.span>
+                  <html.span>Continue with Telegram</html.span>
+                </html.button>
+
+                <html.div className="flex items-center gap-3 my-2">
+                  <html.div className="h-[1px] flex-1 bg-slate-200" />
+                  <html.span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">or</html.span>
+                  <html.div className="h-[1px] flex-1 bg-slate-200" />
+                </html.div>
+
+                <html.form onSubmit={handleEmailLogin} className="space-y-4">
+                  <html.div className="space-y-3">
+                    <html.label className="block">
+                      <html.span className="mb-1.5 block text-xs font-bold text-slate-600 uppercase tracking-wider">Email Address</html.span>
+                      <html.div className="relative">
+                        <html.div className="absolute left-3 top-3 text-slate-400">
+                          <Mail size={16} />
+                        </html.div>
+                        <html.input
+                          type="email"
+                          placeholder="email@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.currentTarget.value)}
+                          className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-800 outline-none focus:border-indigo-500 transition-all"
+                          required
+                        />
+                      </html.div>
+                    </html.label>
+
+                    <html.label className="block">
+                      <html.span className="mb-1.5 block text-xs font-bold text-slate-600 uppercase tracking-wider">Password</html.span>
+                      <html.div className="relative">
+                        <html.div className="absolute left-3 top-3 text-slate-400">
+                          <Lock size={16} />
+                        </html.div>
+                        <html.input
+                          type="password"
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.currentTarget.value)}
+                          className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-800 outline-none focus:border-indigo-500 transition-all"
+                          required
+                        />
+                      </html.div>
+                    </html.label>
+                  </html.div>
+
+                  {loginError && (
+                    <html.p className="text-xs font-semibold text-rose-500">{loginError}</html.p>
+                  )}
+
+                  <html.button
+                    type="submit"
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-bold text-white hover:bg-indigo-600 transition transform hover:scale-[1.01] active:scale-[0.99]"
+                  >
+                    <html.span>Sign In with Email</html.span>
+                  </html.button>
+                </html.form>
+              </html.div>
+            </html.div>
+          </html.div>
+        )}
       </html.main>
     );
   }
