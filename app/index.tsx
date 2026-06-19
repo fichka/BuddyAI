@@ -1,5 +1,5 @@
 import { Redirect, router } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Sparkles, Trophy, Loader2, Mic2, PenLine, Route, LogIn, X, Lock, Mail } from "lucide-react-native";
 import { html } from "@/lib/strictHtml";
 
@@ -38,33 +38,42 @@ export default function IndexRoute() {
 
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const tempAssessmentResult = useBuddyStore((state) => state.tempAssessmentResult);
+  // Ref tracks whether we already triggered the transition (prevents setTimeout cancellation bug)
+  const transitionFiredRef = useRef(false);
 
-  // Animate progress up to 99%
+  // Animate progress up to 99% — faster speed (2.5 / 35ms ≈ ~1.4s to reach 99%)
   useEffect(() => {
     if (phase !== "loading") {
       setAnalysisProgress(0);
+      transitionFiredRef.current = false;
       return;
     }
 
     const interval = setInterval(() => {
       setAnalysisProgress((prev) => {
-        if (prev >= 99) {
-          return 99;
-        }
-        return prev + 1.5;
+        if (prev >= 99) return 99;
+        return prev + 2.5;
       });
-    }, 40);
+    }, 35);
 
     return () => clearInterval(interval);
   }, [phase]);
 
-  // Once result is ready, jump to 100% and transition to intrigue
+  // Once result is ready AND progress reached 99%, trigger transition exactly once.
+  // Using a ref avoids the bug where the setTimeout cleanup fires when analysisProgress
+  // changes from 99 → 100, cancelling the timer before setPhase("intrigue") runs.
   useEffect(() => {
-    if (phase === "loading" && tempAssessmentResult && analysisProgress === 99) {
+    if (
+      phase === "loading" &&
+      tempAssessmentResult &&
+      analysisProgress >= 99 &&
+      !transitionFiredRef.current
+    ) {
+      transitionFiredRef.current = true;
       setAnalysisProgress(100);
       const timer = setTimeout(() => {
         setPhase("intrigue");
-      }, 500);
+      }, 600);
       return () => clearTimeout(timer);
     }
   }, [phase, tempAssessmentResult, analysisProgress]);
@@ -176,7 +185,7 @@ export default function IndexRoute() {
 
   if (phase === "landing") {
     return (
-      <html.main className="min-h-screen bg-slate-50 flex flex-col relative">
+      <html.main className="min-h-screen bg-slate-50 flex flex-col relative overflow-x-hidden">
         {/* Decorative background glows — fixed so they never block scroll */}
         <html.div className="fixed top-0 right-0 h-96 w-96 rounded-full bg-blue-400/10 blur-3xl pointer-events-none z-0" />
         <html.div className="fixed bottom-0 left-0 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl pointer-events-none z-0" />
