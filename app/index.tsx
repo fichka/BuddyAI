@@ -176,10 +176,10 @@ export default function IndexRoute() {
 
   if (phase === "landing") {
     return (
-      <html.main className="min-h-screen bg-slate-50 flex flex-col justify-between relative overflow-hidden">
-        {/* Decorative background glows */}
-        <html.div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
-        <html.div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl pointer-events-none" />
+      <html.main className="min-h-screen bg-slate-50 flex flex-col relative">
+        {/* Decorative background glows — fixed so they never block scroll */}
+        <html.div className="fixed top-0 right-0 h-96 w-96 rounded-full bg-blue-400/10 blur-3xl pointer-events-none z-0" />
+        <html.div className="fixed bottom-0 left-0 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl pointer-events-none z-0" />
 
         {/* Header */}
         <html.header className="relative z-10 w-full max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
