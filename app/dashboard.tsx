@@ -213,23 +213,7 @@ export default function DashboardRoute() {
           </Panel>
         </html.section>
 
-        <Panel ariaLabel="Next tasks">
-          <SectionTitle eyebrow="Next actions" title="Small tasks with high band impact" />
-          <html.div className="grid gap-3 lg:grid-cols-5">
-            {nextTasks.map((task) => (
-              <html.div key={task.id} className="rounded-lg border border-slate-200 p-3">
-                <html.div className="mb-3 flex items-center justify-between gap-2">
-                  <html.span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
-                    {task.stage}
-                  </html.span>
-                  <TaskCheck completed={task.completed} />
-                </html.div>
-                <html.p className="text-sm font-semibold leading-5 text-ink">{task.title}</html.p>
-                <html.p className="mt-2 text-xs text-slate-500">{task.minutes} minutes</html.p>
-              </html.div>
-            ))}
-          </html.div>
-        </Panel>
+
       </html.div>
     </AppShell>
   );

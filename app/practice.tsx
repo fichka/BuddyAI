@@ -13,7 +13,7 @@ import {
 } from "lucide-react-native";
 import { router } from "expo-router";
 import type { Dispatch, SetStateAction } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { html } from "@/lib/strictHtml";
 
 import { AppShell, Panel, Pill, ProgressBar, SectionTitle, Waveform, cn } from "@/components/ui";
@@ -69,6 +69,7 @@ type SpeechWindow = Window &
   };
 
 export default function PracticeRoute() {
+  const recognitionRef = useRef<any>(null);
   const [activeMode, setActiveMode] = useState<PracticeMode>("Speaking");
   const [writingText, setWritingText] = useState(sampleWriting);
   const [selectedWritingId, setSelectedWritingId] = useState(writingTasks[0]?.id ?? "");
@@ -118,6 +119,13 @@ export default function PracticeRoute() {
       return;
     }
 
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      setAiNotice("Speech recording stopped.");
+      return;
+    }
+
     const speechWindow = window as SpeechWindow;
     const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
     if (!Recognition) {
@@ -134,20 +142,21 @@ export default function PracticeRoute() {
     const recognition = new Recognition();
     recognition.lang = "en-US";
     recognition.interimResults = false;
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.onresult = (event) => {
       const transcript = Array.from({ length: event.results.length })
         .map((_, index) => event.results[index]?.[0]?.transcript ?? "")
         .join(" ")
         .trim();
-      updateSpeakingTranscript(transcript || "No response recorded");
+      updateSpeakingTranscript(transcript);
     };
     recognition.onerror = () => {
       setIsListening(false);
-      setAiNotice("Speech recognition stopped. Check microphone permission and try again.");
+      setAiNotice("Speech recognition stopped. Check microphone permission.");
     };
     recognition.onend = () => setIsListening(false);
-    setAiNotice("Listening through your microphone...");
+    recognitionRef.current = recognition;
+    setAiNotice("Listening... Speak clearly. Press the button again when you are finished.");
     setIsListening(true);
     recognition.start();
   };
@@ -446,10 +455,15 @@ Suggested Revision Line: ${writingFeedback.upgradeLine}`;
                       <html.button
                         type="button"
                         onClick={recordRealSpeech}
-                        className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-semibold text-white"
+                        className={cn(
+                          "flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-all duration-300",
+                          isListening
+                            ? "bg-coral text-white animate-pulse"
+                            : "bg-ink text-white hover:bg-ocean"
+                        )}
                       >
                         <Mic2 size={17} color="#ffffff" aria-hidden />
-                        <html.span>{isListening ? "Listening..." : "Record real answer"}</html.span>
+                        <html.span>{isListening ? "Stop Transcribing" : "Record real answer"}</html.span>
                       </html.button>
                       <html.button
                         type="button"

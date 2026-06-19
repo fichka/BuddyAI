@@ -91,29 +91,7 @@ export default function RoadmapRoute() {
           ))}
         </html.section>
 
-        <Panel>
-          <SectionTitle eyebrow="Deadline logic" title="How Buddy sequences the plan" />
-          <html.div className="grid gap-3 md:grid-cols-3">
-            <html.div className="rounded-lg bg-slate-50 p-4">
-              <html.p className="text-sm font-semibold text-ink">Foundation first</html.p>
-              <html.p className="mt-2 text-sm leading-6 text-slate-600">
-                Grammar and vocabulary unlock clearer Writing and Speaking responses.
-              </html.p>
-            </html.div>
-            <html.div className="rounded-lg bg-slate-50 p-4">
-              <html.p className="text-sm font-semibold text-ink">Skill loops</html.p>
-              <html.p className="mt-2 text-sm leading-6 text-slate-600">
-                Each practice task feeds back into the dashboard and Buddy recommendations.
-              </html.p>
-            </html.div>
-            <html.div className="rounded-lg bg-slate-50 p-4">
-              <html.p className="text-sm font-semibold text-ink">Exam finish</html.p>
-              <html.p className="mt-2 text-sm leading-6 text-slate-600">
-                Final stage emphasizes timing, endurance, and post-exam report review.
-              </html.p>
-            </html.div>
-          </html.div>
-        </Panel>
+
       </html.div>
     </AppShell>
   );

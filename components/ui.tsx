@@ -154,20 +154,20 @@ export function AppShell({ active, children }: AppShellProps) {
                   event.preventDefault();
                   router.push("/profile" as any);
                 }}
-                className="hidden items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-2 hover:bg-slate-50 transition md:flex"
+                className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 hover:bg-slate-50 transition md:gap-3 md:px-4 md:py-2"
               >
                 {user.avatarUrl ? (
                   <html.img
                     src={user.avatarUrl}
-                    className="h-10 w-10 rounded-full shrink-0 border border-slate-100"
+                    className="h-8 w-8 rounded-full shrink-0 border border-slate-100 md:h-10 md:w-10"
                     alt="User avatar"
                   />
                 ) : (
-                  <html.div className="flex h-10 w-10 items-center justify-center rounded-lg bg-mint/15 shrink-0">
-                    <Flame size={18} color="#36b37e" aria-hidden />
+                  <html.div className="flex h-8 w-8 items-center justify-center rounded-lg bg-mint/15 shrink-0 md:h-10 md:w-10">
+                    <Flame size={16} color="#36b37e" aria-hidden />
                   </html.div>
                 )}
-                <html.div>
+                <html.div className="hidden md:block">
                   <html.p className="text-sm font-semibold text-ink">{user.fullName}</html.p>
                   <html.p className="text-xs text-slate-500">
                     Predicted {user.predictedBand.toFixed(1)} / Target {user.targetBand.toFixed(1)}
