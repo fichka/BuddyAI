@@ -1,6 +1,7 @@
 // Helper functions for Telegram OAuth 2.0 / OIDC Authorization Code Flow with PKCE
-const CLIENT_ID = "6529279176";
-const CLIENT_SECRET = "ND6rMlN6Dly5QkkuR1Nh7xzsgRfRIxM-Q6uXfrRRXSYUMfKQX0Q9Yw";
+const CLIENT_ID = process.env.EXPO_PUBLIC_TELEGRAM_CLIENT_ID ?? "6529279176";
+const CLIENT_SECRET = process.env.EXPO_PUBLIC_TELEGRAM_CLIENT_SECRET ?? "ND6rMlN6Dly5QkkuR1Nh7xzsgRfRIxM-Q6uXfrRRXSYUMfKQX0Q9Yw";
+
 
 function dec2hex(dec: number): string {
   return ("0" + dec.toString(16)).slice(-2);
