@@ -16,7 +16,7 @@ import {
   Trophy
 } from "lucide-react-native";
 import type { ReactNode } from "react";
-import { html } from "react-strict-dom";
+import { html } from "@/lib/strictHtml";
 
 import { dailyRecommendations } from "@/lib/mockData";
 import { useBuddyStore } from "@/lib/store";
@@ -84,11 +84,11 @@ export function AppShell({ active, children }: AppShellProps) {
   const readiness = useBuddyStore((state) => state.readiness);
 
   return (
-    <html.div className="min-h-screen bg-cloud">
-      <html.div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col md:flex-row">
+    <html.div className="min-h-dvh bg-cloud">
+      <html.div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col md:flex-row">
         <html.aside
           aria-label="Primary"
-          className="hidden w-72 shrink-0 border-r border-slate-200 bg-white px-5 py-6 md:flex md:flex-col"
+          className="hidden w-72 shrink-0 border-r border-slate-200 bg-white px-5 py-6 md:sticky md:top-0 md:flex md:h-dvh md:flex-col"
         >
           <html.div className="mb-8 flex items-center gap-3">
             <html.div className="flex h-11 w-11 items-center justify-center rounded-lg bg-ink">
@@ -139,7 +139,7 @@ export function AppShell({ active, children }: AppShellProps) {
           </html.div>
         </html.aside>
 
-        <html.main className="flex min-h-screen flex-1 flex-col pb-24 md:pb-0">
+        <html.main className="flex min-h-dvh flex-1 flex-col pb-24 md:pb-0">
           <html.header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-4 md:static md:bg-transparent md:px-8 md:py-7">
             <html.div className="flex items-center justify-between gap-4">
               <html.div>
@@ -207,8 +207,13 @@ interface PanelProps {
 }
 
 export function Panel({ children, className, ariaLabel }: PanelProps) {
+  const hasBackground = className?.split(/\s+/).some((item) => item.includes("bg-")) ?? false;
+
   return (
-    <html.section aria-label={ariaLabel} className={cn("rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:p-5", className)}>
+    <html.section
+      aria-label={ariaLabel}
+      className={cn("rounded-lg border border-slate-200 p-4 shadow-sm md:p-5", !hasBackground && "bg-white", className)}
+    >
       {children}
     </html.section>
   );

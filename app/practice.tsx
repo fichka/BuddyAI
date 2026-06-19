@@ -12,7 +12,7 @@ import {
 } from "lucide-react-native";
 import type { Dispatch, SetStateAction } from "react";
 import { useMemo, useState } from "react";
-import { html } from "react-strict-dom";
+import { html } from "@/lib/strictHtml";
 
 import { AppShell, Panel, Pill, ProgressBar, SectionTitle, Waveform, cn } from "@/components/ui";
 import { bandDescriptors, listeningTask, readingPassage, speakingPrompts, writingTasks } from "@/lib/mockData";

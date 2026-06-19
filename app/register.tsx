@@ -3,7 +3,7 @@ import { ArrowRight, CalendarDays, Lock, Mail, UserRound } from "lucide-react-na
 import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { html } from "react-strict-dom";
+import { html } from "@/lib/strictHtml";
 
 import { Panel, Pill, TargetSummary } from "@/components/ui";
 import { useBuddyStore } from "@/lib/store";

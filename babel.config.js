@@ -11,8 +11,7 @@ module.exports = function babelConfig(api) {
           dev: process.env.NODE_ENV !== "production",
           platform: platform === "web" ? "web" : "native"
         }
-      ],
-      "nativewind/babel"
+      ]
     ],
     plugins: ["react-native-reanimated/plugin"]
   };

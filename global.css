@@ -1,4 +1,18 @@
-@import "tailwindcss";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+@import "nativewind/theme";
+
+@theme {
+  --color-ink: #172033;
+  --color-ocean: #1b6b8f;
+  --color-mint: #36b37e;
+  --color-coral: #ff6b4a;
+  --color-amber: #f4b740;
+  --color-violet: #6f5bd8;
+  --color-cloud: #f5f8fb;
+  --shadow-panel: 0 18px 48px rgba(23, 32, 51, 0.12);
+}
 
 :root {
   --color-ink: #172033;
@@ -13,11 +27,22 @@
 html,
 body,
 #root {
+  height: auto !important;
   min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 body {
   background: #f5f8fb;
   color: #172033;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#root,
+#root > div,
+#root > div > div {
+  height: auto !important;
+  min-height: 100vh;
+  overflow: visible !important;
 }

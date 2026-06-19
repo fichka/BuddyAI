@@ -1,6 +1,6 @@
 import { Bot, CalendarDays, GraduationCap, Send, Sparkles, Wand2 } from "lucide-react-native";
 import { useState } from "react";
-import { html } from "react-strict-dom";
+import { html } from "@/lib/strictHtml";
 
 import { AppShell, Panel, Pill, ProgressBar, SectionTitle, cn } from "@/components/ui";
 import { useBuddyStore } from "@/lib/store";

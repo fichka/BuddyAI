@@ -1,6 +1,6 @@
 import { BookOpen, Film, Headphones, Star, Tv } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { html } from "react-strict-dom";
+import { html } from "@/lib/strictHtml";
 
 import { AppShell, Panel, Pill, ProgressBar, SectionTitle, cn } from "@/components/ui";
 import { learnRecommendations } from "@/lib/mockData";

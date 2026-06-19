@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { ArrowRight, CheckCircle2, ClipboardCheck, Headphones, Mic2, PenLine, Timer } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { html } from "react-strict-dom";
+import { html } from "@/lib/strictHtml";
 
 import { Panel, Pill, ProgressBar, SectionTitle, cn } from "@/components/ui";
 import { diagnosticQuestions } from "@/lib/mockData";

@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { ArrowRight, CalendarDays, Flame, Send, Target, TrendingUp, Trophy } from "lucide-react-native";
 import { useState } from "react";
-import { html } from "react-strict-dom";
+import { html } from "@/lib/strictHtml";
 
 import { AppShell, MetricCard, Panel, ProgressBar, RecommendationStrip, SectionTitle, TaskCheck } from "@/components/ui";
 import { dailyRecommendations } from "@/lib/mockData";

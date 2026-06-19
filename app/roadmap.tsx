@@ -1,5 +1,5 @@
 import { Clock, Route, Sparkles } from "lucide-react-native";
-import { html } from "react-strict-dom";
+import { html } from "@/lib/strictHtml";
 
 import { AppShell, Panel, Pill, ProgressBar, SectionTitle, TaskCheck, cn } from "@/components/ui";
 import { useBuddyStore } from "@/lib/store";
