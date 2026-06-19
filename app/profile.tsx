@@ -32,6 +32,20 @@ export default function ProfileRoute() {
     triggerSaveNotification();
   };
 
+  const handleAvatarUpload = (e: any) => {
+    const file = e.currentTarget.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Url = event.target?.result as string;
+      if (base64Url) {
+        handleSelectPreset(base64Url);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSelectPreset = (url: string) => {
     setActivePreset(url);
     useBuddyStore.setState((state) => ({
@@ -103,6 +117,21 @@ export default function ProfileRoute() {
                   );
                 })}
               </html.div>
+
+              <html.label
+                htmlFor="avatar-upload"
+                className="mt-3 flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white px-4 text-xs font-semibold text-slate-600 hover:border-ocean hover:bg-slate-50 transition"
+              >
+                <ImageIcon size={14} color="#64748b" aria-hidden />
+                <html.span>Upload Custom Image</html.span>
+                <html.input
+                  type="file"
+                  id="avatar-upload"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+              </html.label>
             </html.div>
 
             {/* Right: Personal details */}

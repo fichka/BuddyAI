@@ -1,6 +1,6 @@
 import { Redirect, router } from "expo-router";
 import { useState } from "react";
-import { ArrowRight, Sparkles, Trophy, Loader2 } from "lucide-react-native";
+import { ArrowRight, Sparkles, Trophy, Loader2, Mic2, PenLine, Route } from "lucide-react-native";
 import { html } from "@/lib/strictHtml";
 
 import { useBuddyStore } from "@/lib/store";
@@ -97,33 +97,98 @@ export default function IndexRoute() {
 
   if (phase === "landing") {
     return (
-      <html.main className="min-h-screen bg-cloud flex flex-col justify-center items-center px-4 py-12 md:px-8">
-        <html.div className="max-w-2xl w-full text-center space-y-8">
-          <html.div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-ink shadow-panel">
-            <Sparkles size={32} color="#ffffff" aria-hidden />
+      <html.main className="min-h-screen bg-slate-50 flex flex-col justify-between relative overflow-hidden">
+        {/* Decorative background glows */}
+        <html.div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
+        <html.div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-indigo-400/10 blur-3xl pointer-events-none" />
+
+        {/* Hero Section */}
+        <html.section className="relative z-10 flex flex-col items-center justify-center text-center px-4 py-20 md:py-32 max-w-5xl mx-auto w-full">
+          <html.div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-lg mb-8">
+            <Sparkles size={26} color="#ffffff" aria-hidden />
           </html.div>
-          <html.div className="space-y-4">
-            <html.span className="inline-flex items-center rounded-full bg-ocean/10 px-4 py-1.5 text-xs font-semibold tracking-wider uppercase text-ocean">
-              IELTS Prep Refinement
+          
+          <html.span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-4 py-1.5 text-xs font-semibold text-indigo-600 border border-indigo-100 shadow-sm mb-6">
+            IELTS Buddy AI Examiner
+          </html.span>
+
+          <html.h1 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl md:text-7xl leading-tight max-w-4xl">
+            Master IELTS with Your{" "}
+            <html.span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+              Personal AI Examiner
             </html.span>
-            <html.h1 className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl md:text-6xl leading-tight">
-              Unlock Your True <html.span className="text-ocean">IELTS</html.span> Band Score.
-            </html.h1>
-            <html.p className="text-lg text-slate-500 max-w-lg mx-auto leading-relaxed">
-              Take a fast, 5-minute diagnostic test graded by advanced Gemini AI. Learn your current level instantly without registering.
-            </html.p>
-          </html.div>
-          <html.div className="pt-4 flex justify-center">
+          </html.h1>
+
+          <html.p className="mt-6 text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            No endless registration, no fee. Just start speaking or typing, and get your predicted band score in 5 minutes.
+          </html.p>
+
+          <html.div className="mt-10 flex justify-center w-full">
             <html.button
               type="button"
               onClick={handleStartTest}
-              className="flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-ink px-10 text-lg font-bold text-white shadow-panel hover:bg-ocean transition-all transform hover:scale-105"
+              className="group relative flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-10 text-lg font-bold text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 w-full sm:w-auto"
             >
               <html.span>Get Your Band Score Right Now</html.span>
-              <ArrowRight size={22} color="#ffffff" aria-hidden />
+              <ArrowRight size={22} color="#ffffff" className="transition-transform group-hover:translate-x-1" aria-hidden />
             </html.button>
           </html.div>
-        </html.div>
+        </html.section>
+
+        {/* Benefits Section */}
+        <html.section className="relative z-10 border-t border-slate-200/50 bg-white/50 backdrop-blur-md py-16 w-full">
+          <html.div className="max-w-7xl mx-auto px-4">
+            <html.div className="max-w-xl mx-auto text-center mb-12">
+              <html.h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                Designed to maximize your IELTS band
+              </html.h2>
+              <html.p className="mt-3 text-slate-500 text-sm md:text-base">
+                Everything you need to prepare, practice, and polish your skills for exam day.
+              </html.p>
+            </html.div>
+
+            <html.div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+              {/* Card 1: Speaking Partner */}
+              <html.div className="bg-white/70 backdrop-blur-md border border-slate-200/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-start gap-4">
+                <html.div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 border border-blue-100 text-blue-600">
+                  <Mic2 size={22} />
+                </html.div>
+                <html.div className="space-y-1">
+                  <html.h3 className="text-lg font-bold text-slate-900">24/7 AI Speaking Partner</html.h3>
+                  <html.p className="text-sm text-slate-500 leading-relaxed">
+                    Practice Speaking Part 1 & Part 2. Continuous real speech transcribing and immediate vocabulary upgrades.
+                  </html.p>
+                </html.div>
+              </html.div>
+
+              {/* Card 2: Writing Feedback */}
+              <html.div className="bg-white/70 backdrop-blur-md border border-slate-200/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-start gap-4">
+                <html.div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+                  <PenLine size={22} />
+                </html.div>
+                <html.div className="space-y-1">
+                  <html.h3 className="text-lg font-bold text-slate-900">Instant Gemini Writing Grading</html.h3>
+                  <html.p className="text-sm text-slate-500 leading-relaxed">
+                    Submit IELTS Task 1 and Task 2. Get immediate feedback scored strictly against official band descriptors.
+                  </html.p>
+                </html.div>
+              </html.div>
+
+              {/* Card 3: Personalized Roadmap */}
+              <html.div className="bg-white/70 backdrop-blur-md border border-slate-200/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-start gap-4 sm:col-span-2 lg:col-span-1">
+                <html.div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-50 border border-violet-100 text-violet-600">
+                  <Route size={22} />
+                </html.div>
+                <html.div className="space-y-1">
+                  <html.h3 className="text-lg font-bold text-slate-900">Personalized Study Roadmap</html.h3>
+                  <html.p className="text-sm text-slate-500 leading-relaxed">
+                    Auto-generated prep plan targeted around your weak spots. Follow structured checklists to hit your band target.
+                  </html.p>
+                </html.div>
+              </html.div>
+            </html.div>
+          </html.div>
+        </html.section>
       </html.main>
     );
   }

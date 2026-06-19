@@ -111,11 +111,21 @@ export default function LearnRoute() {
                     <html.p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Weekly task</html.p>
                     <html.p className="mt-2 text-sm leading-5 text-ink">{item.weeklyTask}</html.p>
                   </html.div>
+                  {item.link && (
+                    <html.a
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                    >
+                      <html.span>Open Source Material</html.span>
+                    </html.a>
+                  )}
                   <html.button
                     type="button"
                     onClick={() => toggleComplete(item.id)}
                     className={cn(
-                      "mt-4 flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold",
+                      "mt-3 flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold",
                       completed ? "bg-mint text-white" : "bg-ink text-white"
                     )}
                   >

@@ -235,12 +235,6 @@ export const dailyRecommendations: DailyRecommendation[] = [
     title: "Record a Part 2 answer about a helpful person",
     reason: "A longer answer will improve fluency and topic development.",
     action: "Start Speaking"
-  },
-  {
-    id: "rec-reading",
-    title: "Do 10 minutes of evidence-line review",
-    reason: "Your roadmap is behind in Reading accuracy.",
-    action: "Practice Reading"
   }
 ];
 
@@ -400,7 +394,8 @@ export const learnRecommendations: LearnRecommendation[] = [
     title: "Friends",
     level: "B1",
     reason: "Clear everyday dialogue helps with natural responses in Speaking Part 1.",
-    weeklyTask: "Watch 15 minutes and copy five useful expressions."
+    weeklyTask: "Watch 15 minutes and copy five useful expressions.",
+    link: "https://www.netflix.com/title/70153404"
   },
   {
     id: "learn-office",
@@ -408,7 +403,8 @@ export const learnRecommendations: LearnRecommendation[] = [
     title: "The Office",
     level: "B2",
     reason: "Workplace conversations build informal and semi-formal vocabulary.",
-    weeklyTask: "Summarize one scene using reported speech."
+    weeklyTask: "Summarize one scene using reported speech.",
+    link: "https://www.netflix.com/title/70136120"
   },
   {
     id: "learn-movie",
@@ -416,7 +412,8 @@ export const learnRecommendations: LearnRecommendation[] = [
     title: "The Social Network",
     level: "B2",
     reason: "Fast academic and business dialogue trains listening for attitude and purpose.",
-    weeklyTask: "Pause after three scenes and predict the speaker's intention."
+    weeklyTask: "Pause after three scenes and predict the speaker's intention.",
+    link: "https://www.netflix.com/title/70132721"
   },
   {
     id: "learn-podcast",
@@ -424,7 +421,8 @@ export const learnRecommendations: LearnRecommendation[] = [
     title: "BBC 6 Minute English",
     level: "B1",
     reason: "Short episodes with topic vocabulary suit daily listening practice.",
-    weeklyTask: "Write a 60 word summary after one episode."
+    weeklyTask: "Write a 60 word summary after one episode.",
+    link: "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english"
   },
   {
     id: "learn-book",
@@ -432,7 +430,8 @@ export const learnRecommendations: LearnRecommendation[] = [
     title: "Atomic Habits",
     level: "B2",
     reason: "Accessible non-fiction supports Task 2 examples about behavior and education.",
-    weeklyTask: "Extract three cause-effect sentences."
+    weeklyTask: "Extract three cause-effect sentences.",
+    link: "https://jamesclear.com/atomic-habits"
   }
 ];
 

@@ -186,4 +186,5 @@ export interface LearnRecommendation {
   level: CEFRLevel;
   reason: string;
   weeklyTask: string;
+  link?: string;
 }
