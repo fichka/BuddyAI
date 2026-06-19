@@ -1,10 +1,11 @@
 import { Redirect, router } from "expo-router";
 import { useState } from "react";
-import { FileText, PenLine, ArrowRight, Sparkles } from "lucide-react-native";
+import { ArrowRight, Sparkles, Trophy, Loader2 } from "lucide-react-native";
 import { html } from "@/lib/strictHtml";
 
 import { useBuddyStore } from "@/lib/store";
 import { Panel, Pill, SectionTitle, cn } from "@/components/ui";
+import { assessWritingWithGemini } from "@/lib/aiClient";
 
 const readingQuestion = {
   id: "reading-green-benefit",
@@ -21,6 +22,10 @@ const readingQuestion = {
 export default function IndexRoute() {
   const registrationComplete = useBuddyStore((state) => state.registrationComplete);
   const setMiniTestAnswers = useBuddyStore((state) => state.setMiniTestAnswers);
+  const setTempAssessmentResult = useBuddyStore((state) => state.setTempAssessmentResult);
+  const user = useBuddyStore((state) => state.user);
+
+  const [phase, setPhase] = useState<"landing" | "test" | "loading" | "intrigue">("landing");
   const [selectedReading, setSelectedReading] = useState("");
   const [writingAnswer, setWritingAnswer] = useState("");
   const [errorNotice, setErrorNotice] = useState("");
@@ -29,7 +34,11 @@ export default function IndexRoute() {
     return <Redirect href="/dashboard" />;
   }
 
-  const handleStartOnboarding = () => {
+  const handleStartTest = () => {
+    setPhase("test");
+  };
+
+  const handleSubmitTest = async () => {
     if (!selectedReading || !writingAnswer.trim()) {
       setErrorNotice("Please answer both the reading and writing questions to continue.");
       return;
@@ -39,8 +48,129 @@ export default function IndexRoute() {
       readingAnswers: { [readingQuestion.id]: selectedReading },
       writingAnswer: writingAnswer.trim()
     });
+
+    setPhase("loading");
+
+    try {
+      const isReadingCorrect = selectedReading === readingQuestion.correctAnswer;
+      const taskPayload = {
+        taskType: "Task 2" as const,
+        title: "Technology and Education",
+        prompt: "Some people believe that digital devices improve education, while others think they distract students.",
+        sampleBandNine: "Digital devices can improve education by offering instant access to information, provided that schools enforce rules to prevent distraction."
+      };
+
+      const assessment = await assessWritingWithGemini(user, taskPayload, writingAnswer.trim());
+      const baseWritingBand = assessment.band;
+      const readingBonus = isReadingCorrect ? 0.5 : 0;
+      const overallBand = Math.min(9.0, Math.max(4.0, baseWritingBand + readingBonus));
+
+      setTempAssessmentResult({
+        band: overallBand,
+        summary: assessment.summary,
+        readingCorrect: isReadingCorrect,
+        strengths: assessment.strengths || ["Grammar control is stable", "Clear position stated"],
+        improvements: assessment.improvements || ["Add more academic linkers", "Expand the explanation"]
+      });
+
+      setPhase("intrigue");
+    } catch (err) {
+      console.warn("Gemini diagnostic failed, fallback to mock evaluation:", err);
+      const isReadingCorrect = selectedReading === readingQuestion.correctAnswer;
+      const overallBand = isReadingCorrect ? 6.5 : 6.0;
+
+      setTempAssessmentResult({
+        band: overallBand,
+        summary: "Your response is clear and provides a solid foundation. Focus on introducing more formal linkers (e.g. furthermore, consequently) and expanding body paragraphs with examples.",
+        readingCorrect: isReadingCorrect,
+        strengths: ["Clear direct position", "Appropriate vocabulary choice"],
+        improvements: ["Structure longer paragraphs", "Add formal cohesive devices"]
+      });
+
+      setPhase("intrigue");
+    }
+  };
+
+  const handleContinueToRegistration = () => {
     router.push("/register/name" as any);
   };
+
+  if (phase === "landing") {
+    return (
+      <html.main className="min-h-screen bg-cloud flex flex-col justify-center items-center px-4 py-12 md:px-8">
+        <html.div className="max-w-2xl w-full text-center space-y-8">
+          <html.div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-ink shadow-panel">
+            <Sparkles size={32} color="#ffffff" aria-hidden />
+          </html.div>
+          <html.div className="space-y-4">
+            <html.span className="inline-flex items-center rounded-full bg-ocean/10 px-4 py-1.5 text-xs font-semibold tracking-wider uppercase text-ocean">
+              IELTS Prep Refinement
+            </html.span>
+            <html.h1 className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl md:text-6xl leading-tight">
+              Unlock Your True <html.span className="text-ocean">IELTS</html.span> Band Score.
+            </html.h1>
+            <html.p className="text-lg text-slate-500 max-w-lg mx-auto leading-relaxed">
+              Take a fast, 5-minute diagnostic test graded by advanced Gemini AI. Learn your current level instantly without registering.
+            </html.p>
+          </html.div>
+          <html.div className="pt-4 flex justify-center">
+            <html.button
+              type="button"
+              onClick={handleStartTest}
+              className="flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-ink px-10 text-lg font-bold text-white shadow-panel hover:bg-ocean transition-all transform hover:scale-105"
+            >
+              <html.span>Get Your Band Score Right Now</html.span>
+              <ArrowRight size={22} color="#ffffff" aria-hidden />
+            </html.button>
+          </html.div>
+        </html.div>
+      </html.main>
+    );
+  }
+
+  if (phase === "loading") {
+    return (
+      <html.main className="min-h-screen bg-cloud flex items-center justify-center p-6">
+        <html.div className="text-center space-y-6 max-w-sm">
+          <html.div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 shadow-panel">
+            <Loader2 size={36} color="#172033" className="animate-spin" aria-hidden />
+          </html.div>
+          <html.div className="space-y-2">
+            <html.h2 className="text-2xl font-bold text-ink">Analyzing your English level...</html.h2>
+            <html.p className="text-sm text-slate-500 leading-relaxed">
+              Gemini AI is assessing your Reading comprehension and Writing syntax coherence against IELTS public band descriptors.
+            </html.p>
+          </html.div>
+        </html.div>
+      </html.main>
+    );
+  }
+
+  if (phase === "intrigue") {
+    return (
+      <html.main className="min-h-screen bg-cloud flex flex-col justify-center items-center px-4 py-12 md:px-8">
+        <html.div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-6 shadow-panel">
+          <html.div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-mint/10">
+            <Trophy size={28} color="#36b37e" aria-hidden />
+          </html.div>
+          <html.div className="space-y-2">
+            <html.h2 className="text-2xl font-bold text-ink">Your IELTS Band Score is Ready!</html.h2>
+            <html.p className="text-sm text-slate-500 leading-relaxed">
+              We've successfully generated your custom IELTS assessment. Finish setting up your profile to reveal your predicted band score and detailed breakdown.
+            </html.p>
+          </html.div>
+          <html.button
+            type="button"
+            onClick={handleContinueToRegistration}
+            className="w-full flex min-h-12 items-center justify-center gap-2 rounded-xl bg-ink px-6 text-sm font-semibold text-white shadow-panel hover:bg-ocean transition"
+          >
+            <html.span>Continue to Registration</html.span>
+            <ArrowRight size={18} color="#ffffff" aria-hidden />
+          </html.button>
+        </html.div>
+      </html.main>
+    );
+  }
 
   return (
     <html.main className="min-h-screen bg-cloud px-4 py-8 md:px-8 md:py-12">
@@ -51,7 +181,7 @@ export default function IndexRoute() {
           </html.div>
           <html.h1 className="text-3xl font-bold tracking-tight text-ink md:text-4xl">IELTS Placement Diagnostic</html.h1>
           <html.p className="mt-2 text-base text-slate-500 max-w-xl mx-auto">
-            Take this quick 5-minute Reading and Writing test. Get instant AI band grading and a personalized study roadmap.
+            Answer the Reading comprehension and Writing prompts below to generate your score.
           </html.p>
         </html.header>
 
@@ -127,7 +257,7 @@ export default function IndexRoute() {
         <html.div className="flex justify-center">
           <html.button
             type="button"
-            onClick={handleStartOnboarding}
+            onClick={handleSubmitTest}
             className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-ink px-8 text-sm font-semibold text-white shadow-panel hover:bg-ocean transition"
           >
             <html.span>Check My Score</html.span>

@@ -45,6 +45,22 @@ interface BuddyStore {
     writingAnswer: string;
   };
   answerHistory: AnswerHistoryItem[];
+  tempAssessmentResult: {
+    band: number;
+    summary: string;
+    readingCorrect: boolean;
+    strengths: string[];
+    improvements: string[];
+  } | null;
+  showTriumphantReveal: boolean;
+  setTempAssessmentResult: (result: {
+    band: number;
+    summary: string;
+    readingCorrect: boolean;
+    strengths: string[];
+    improvements: string[];
+  } | null) => void;
+  setShowTriumphantReveal: (show: boolean) => void;
   registerUser: (form: RegistrationForm) => void;
   setRegisterForm: (form: Partial<RegistrationForm>) => void;
   setMiniTestAnswers: (answers: { readingAnswers?: Record<string, string>; writingAnswer?: string }) => void;
@@ -201,13 +217,19 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
   registerForm: {
     fullName: "",
     classLevel: "11",
-    aboutMe: ""
+    aboutMe: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    targetBand: 7.0
   },
   miniTestAnswers: {
     readingAnswers: {},
     writingAnswer: ""
   },
   answerHistory: [],
+  tempAssessmentResult: null,
+  showTriumphantReveal: false,
   setRegisterForm: (form) => set((state) => ({ registerForm: { ...state.registerForm, ...form } })),
   setMiniTestAnswers: (answers) => set((state) => ({
     miniTestAnswers: {
@@ -217,6 +239,7 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
   })),
   registerUser: (form) => {
     const mini = get().miniTestAnswers;
+    const temp = get().tempAssessmentResult;
     const historyItems = [
       {
         id: "mini-test-reading",
@@ -231,15 +254,50 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
         answer: mini.writingAnswer || "No answer"
       }
     ];
+
+    let updatedUser = {
+      ...get().user,
+      fullName: form.fullName.trim() || "IELTS Candidate",
+      classLevel: form.classLevel || "11",
+      aboutMe: form.aboutMe.trim() || "Prepared for university admission.",
+      email: form.email.trim() || "candidate@example.com",
+      targetBand: form.targetBand || 7.0,
+    };
+
+    let updatedDiagnosticResult = get().diagnosticResult;
+    let diagnosticComplete = get().diagnosticComplete;
+    let readiness = get().readiness;
+
+    if (temp) {
+      const cefrLevel = temp.band >= 7 ? "C1" : temp.band >= 6.5 ? "B2" : temp.band >= 5.5 ? "B1" : "A2";
+      updatedUser.predictedBand = temp.band;
+      updatedUser.currentLevel = cefrLevel;
+      diagnosticComplete = true;
+
+      updatedDiagnosticResult = {
+        cefrLevel,
+        baseBand: temp.band,
+        sectionScores: {
+          Reading: temp.readingCorrect ? Math.min(9, temp.band + 0.5) : Math.max(4, temp.band - 0.5),
+          Listening: temp.band,
+          Writing: temp.band,
+          Speaking: temp.band
+        },
+        summary: temp.summary
+      };
+
+      const targetBand = updatedUser.targetBand;
+      readiness = clamp(Math.round((temp.band / targetBand) * 82), 42, 96);
+    }
+
     set((state) => ({
-      user: {
-        ...state.user,
-        fullName: form.fullName.trim() || mockUserProfile.fullName,
-        classLevel: form.classLevel || mockUserProfile.classLevel,
-        aboutMe: form.aboutMe.trim() || mockUserProfile.aboutMe,
-      },
+      user: updatedUser,
       registrationComplete: true,
-      answerHistory: [...state.answerHistory, ...historyItems]
+      diagnosticComplete,
+      diagnosticResult: updatedDiagnosticResult,
+      readiness,
+      answerHistory: [...state.answerHistory, ...historyItems],
+      showTriumphantReveal: true
     }));
   },
   completeDiagnostic: (correctAnswers, totalQuestions) => {
@@ -466,5 +524,7 @@ export const useBuddyStore = create<BuddyStore>((set, get) => ({
         }
       ]
     }));
-  }
+  },
+  setTempAssessmentResult: (result) => set({ tempAssessmentResult: result }),
+  setShowTriumphantReveal: (show) => set({ showTriumphantReveal: show })
 }));

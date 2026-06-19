@@ -15,6 +15,9 @@ export default function DashboardRoute() {
   const roadmap = useBuddyStore((state) => state.roadmap);
   const chat = useBuddyStore((state) => state.chat);
   const sendBuddyMessage = useBuddyStore((state) => state.sendBuddyMessage);
+  const showTriumphantReveal = useBuddyStore((state) => state.showTriumphantReveal);
+  const tempAssessmentResult = useBuddyStore((state) => state.tempAssessmentResult);
+  const setShowTriumphantReveal = useBuddyStore((state) => state.setShowTriumphantReveal);
   const [message, setMessage] = useState("Give me today's 30 minute plan");
 
   const bandGap = Math.max(0, user.targetBand - user.predictedBand);
@@ -29,6 +32,80 @@ export default function DashboardRoute() {
   return (
     <AppShell active="Dashboard">
       <html.div className="space-y-5">
+        {showTriumphantReveal && tempAssessmentResult && (
+          <Panel className="bg-ink text-white p-6 relative overflow-hidden border border-slate-800" ariaLabel="Triumphant Score Reveal">
+            <html.div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-mint/10 blur-2xl animate-pulse" />
+            <html.div className="absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-ocean/10 blur-2xl animate-pulse" />
+            
+            <html.div className="flex flex-col gap-6 relative z-10">
+              <html.div className="flex items-start justify-between gap-4 flex-wrap">
+                <html.div className="flex items-center gap-3">
+                  <html.div className="flex h-12 w-12 items-center justify-center rounded-xl bg-mint shadow-panel">
+                    <Trophy size={24} color="#ffffff" aria-hidden />
+                  </html.div>
+                  <html.div>
+                    <html.p className="text-xs font-semibold uppercase tracking-wider text-mint">Congratulations!</html.p>
+                    <html.h2 className="text-xl font-bold text-white">Your IELTS Diagnostics Are Ready</html.h2>
+                  </html.div>
+                </html.div>
+                
+                <html.button
+                  type="button"
+                  onClick={() => setShowTriumphantReveal(false)}
+                  className="rounded-lg bg-mint hover:bg-ocean px-4 py-2 transition text-xs font-bold text-white shadow-panel"
+                >
+                  Start My Prep
+                </html.button>
+              </html.div>
+
+              <html.div className="border-t border-white/10 my-1" />
+
+              <html.div className="grid gap-6 md:grid-cols-[1fr_1fr]">
+                <html.div className="space-y-4">
+                  <html.div>
+                    <html.p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Predicted Overall Band</html.p>
+                    <html.div className="mt-1 flex items-baseline gap-2">
+                      <html.span className="text-5xl font-black text-mint">{tempAssessmentResult.band.toFixed(1)}</html.span>
+                      <html.span className="text-sm font-semibold text-slate-300">Target: {user.targetBand.toFixed(1)}</html.span>
+                    </html.div>
+                  </html.div>
+                  
+                  <html.p className="text-sm leading-relaxed text-slate-200">
+                    {tempAssessmentResult.summary}
+                  </html.p>
+                </html.div>
+
+                <html.div className="space-y-4">
+                  <html.div className="grid gap-2 grid-cols-2">
+                    <html.div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                      <html.p className="text-xs text-slate-400">Reading Placement</html.p>
+                      <html.p className="mt-1 text-sm font-semibold text-white">
+                        {tempAssessmentResult.readingCorrect ? "✅ 1/1 Correct" : "❌ 0/1 Correct"}
+                      </html.p>
+                    </html.div>
+                    <html.div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                      <html.p className="text-xs text-slate-400">Writing Grading</html.p>
+                      <html.p className="mt-1 text-sm font-semibold text-white">Gemini Evaluated</html.p>
+                    </html.div>
+                  </html.div>
+
+                  <html.div className="space-y-2">
+                    <html.p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Key Focus Areas</html.p>
+                    <html.div className="space-y-1">
+                      {tempAssessmentResult.improvements.slice(0, 2).map((imp, idx) => (
+                        <html.div key={idx} className="flex items-center gap-2 text-xs text-slate-300">
+                          <html.div className="h-1.5 w-1.5 rounded-full bg-ocean" />
+                          <html.span>{imp}</html.span>
+                        </html.div>
+                      ))}
+                    </html.div>
+                  </html.div>
+                </html.div>
+              </html.div>
+            </html.div>
+          </Panel>
+        )}
+
         <RecommendationStrip />
 
         <html.section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="IELTS progress metrics">

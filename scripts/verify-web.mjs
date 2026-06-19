@@ -55,33 +55,33 @@ let state = await pageState(page);
 assert(state.bodyLength > 200, "Landing page rendered too little content");
 assert(!state.hasOverlay, "Error overlay detected on landing page");
 assert(state.bodyBackground !== "rgba(0, 0, 0, 0)", "Global background CSS did not apply");
+// Click the huge landing page CTA
+await page.getByRole("button", { name: "Get Your Band Score Right Now" }).click();
 
 // Fill out the mini placement test
 await page.getByRole("button", { name: "They reduce rainwater runoff and improve insulation." }).click();
 await page.getByPlaceholder("e.g. In my opinion, digital", { exact: false }).fill("In my opinion, digital devices can significantly improve education by offering instant access to information, provided they are managed well.");
 await page.getByRole("button", { name: "Check My Score" }).click();
 
-// Step 1: Name
+// Wait for the intrigue teaser screen and click Continue to Registration
+await page.getByRole("button", { name: "Continue to Registration" }).click();
+
+// Step 1: Credentials Setup
 await page.waitForURL("**/register/name");
-await page.getByRole("textbox", { name: "Full Name" }).fill("Amina Rahman");
+await page.getByRole("textbox", { name: "Email Address" }).fill("amina.rahman@example.com");
+await page.getByPlaceholder("Enter password (min 6 chars)").fill("securepass123");
+await page.getByPlaceholder("Confirm password").fill("securepass123");
 await page.getByRole("button", { name: "Next Step" }).click();
 
-// Step 2: Class
+// Step 2: Target Band Setup
 await page.waitForURL("**/register/class");
-await page.getByRole("button", { name: "Class 11" }).click();
-await page.getByRole("button", { name: "Next Step" }).click();
+await page.getByRole("button", { name: "Band 7.5" }).click();
+await page.getByRole("button", { name: "Complete Registration" }).click();
 
-// Step 3: About
-await page.waitForURL("**/register/about");
-await page.getByRole("textbox", { name: "About Me" }).fill("I want to study abroad and need a stronger IELTS Writing score.");
-await page.getByRole("button", { name: "Reveal Results" }).click();
-
-// Reveal screen
-await page.waitForURL("**/register/reveal");
-await page.getByRole("button", { name: "Go to Study Dashboard" }).click();
-
-// Dashboard check
+// Dashboard check (directly from About)
 await page.waitForURL("**/dashboard");
+// Wait for the triumphant diagnostics panel and dismiss it
+await page.getByRole("button", { name: "Start My Prep" }).click();
 await page.getByText("Predicted band", { exact: true }).waitFor();
 
 await page.getByLabel("Ask Buddy").fill("Give me a writing plan");

@@ -19,11 +19,15 @@ export default function RegisterAboutRoute() {
     const finalForm = {
       fullName: registerForm.fullName,
       classLevel: registerForm.classLevel,
-      aboutMe: about.trim()
+      aboutMe: about.trim(),
+      email: registerForm.email || "",
+      password: registerForm.password || "",
+      confirmPassword: registerForm.confirmPassword || "",
+      targetBand: registerForm.targetBand || 7.0
     };
     setRegisterForm({ aboutMe: about.trim() });
     registerUser(finalForm);
-    router.push("/register/reveal" as any);
+    router.push("/dashboard" as any);
   };
 
   return (

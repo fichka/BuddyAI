@@ -16,6 +16,10 @@ export interface RegistrationForm {
   fullName: string;
   classLevel: "9" | "10" | "11" | "12";
   aboutMe: string;
+  email: string;
+  password?: string;
+  confirmPassword?: string;
+  targetBand: number;
 }
 
 export interface UserProfile {
